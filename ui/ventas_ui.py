@@ -1,33 +1,9 @@
 """
-Interfaz del modulo de ventas.
+Modulo de ventas en consola.
 
-TODO: definir componentes y acciones del modulo.
+TODO: implementar flujo de ventas en consola.
 """
 
-import tkinter as tk
-
-
 class VentasUI:
-    def __init__(self, parent: tk.Tk) -> None:
-        self.parent = parent
-        self.window: tk.Toplevel | None = None
-
     def show(self) -> None:
-        if self.window is None or not self.window.winfo_exists():
-            self.window = tk.Toplevel(self.parent)
-            self.window.title("Ventas")
-            self.window.geometry("400x300")
-            self.window.configure(bg="#f2f2f2")
-
-            label = tk.Label(
-                self.window,
-                text="Modulo de Ventas",
-                bg="#f2f2f2",
-                fg="#333333",
-                font=("Arial", 12, "bold"),
-            )
-            label.pack(pady=20)
-
-            # TODO: agregar formulario y resumen de ventas
-        else:
-            self.window.focus()
+        print("Modulo de ventas no implementado.")

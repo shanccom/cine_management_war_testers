@@ -1,4 +1,11 @@
 {
-  "items": [],
-  "_todo": "Agregar peliculas de ejemplo"
+  "items": [
+    {
+      "nombre": "",
+      "genero": "",
+      "duracion": "",
+      "clasificacion": "",
+      "sala": ""
+    }
+  ]
 }
