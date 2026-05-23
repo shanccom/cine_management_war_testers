@@ -5,6 +5,15 @@ TODO: agregar confirmaciones antes de eliminar registros.
 """
 
 from core.peliculas import PeliculaManager
+from core.validaciones import (
+    CLASIFICACIONES_VALIDAS,
+    GENEROS_VALIDOS,
+    validar_clasificacion,
+    validar_duracion,
+    validar_genero,
+    validar_nombre,
+    validar_sala,
+)
 
 
 class PeliculasUI:
@@ -39,11 +48,10 @@ class PeliculasUI:
     def registrar_pelicula(self) -> None:
         # Registra una pelicula nueva.
         pelicula = self._leer_pelicula()
-        # TODO: agregar validaciones basicas de campos requeridos
         if self.manager.agregar_pelicula(pelicula):
             print("Pelicula registrada.")
         else:
-            print("No se pudo registrar la pelicula.")
+            self._mostrar_errores("No se pudo registrar la pelicula.")
 
     def editar_pelicula(self) -> None:
         # Edita una pelicula existente.
@@ -64,7 +72,7 @@ class PeliculasUI:
         if self.manager.editar_pelicula(indice, pelicula):
             print("Pelicula actualizada.")
         else:
-            print("No se pudo editar la pelicula.")
+            self._mostrar_errores("No se pudo editar la pelicula.")
 
     def eliminar_pelicula(self) -> None:
         # Elimina una pelicula existente.
@@ -96,11 +104,23 @@ class PeliculasUI:
 
     def _leer_pelicula(self) -> dict:
         # Solicita los campos de la pelicula por consola.
-        nombre = input("Nombre: ").strip()
-        genero = input("Genero: ").strip()
-        duracion = input("Duracion: ").strip()
-        clasificacion = input("Clasificacion: ").strip()
-        sala = input("Sala: ").strip()
+        nombre = self._leer_con_validacion("Nombre: ", validar_nombre)
+        genero = self._leer_con_validacion(
+            f"Genero ({', '.join(GENEROS_VALIDOS)}): ",
+            validar_genero,
+        )
+        duracion = self._leer_con_validacion(
+            "Duracion (30-300): ",
+            validar_duracion,
+        )
+        clasificacion = self._leer_con_validacion(
+            f"Clasificacion ({', '.join(CLASIFICACIONES_VALIDAS)}): ",
+            validar_clasificacion,
+        )
+        sala = self._leer_con_validacion(
+            "Sala (1-20): ",
+            validar_sala,
+        )
 
         return {
             "nombre": nombre,
@@ -109,6 +129,22 @@ class PeliculasUI:
             "clasificacion": clasificacion,
             "sala": sala,
         }
+
+    def _leer_con_validacion(self, prompt: str, validador) -> object:
+        # Lee un valor y lo valida en el momento.
+        while True:
+            valor = input(prompt).strip()
+            ok, mensaje, dato = validador(valor)
+            if ok:
+                return dato
+            print(mensaje)
+
+    def _mostrar_errores(self, encabezado: str) -> None:
+        # Muestra errores del gestor si existen.
+        print(encabezado)
+        if self.manager.ultimo_error:
+            for mensaje in self.manager.ultimo_error:
+                print(f"- {mensaje}")
 
     def _leer_indice(self) -> int | None:
         # Lee el indice desde la consola con manejo simple de errores.

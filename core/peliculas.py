@@ -9,6 +9,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from core.validaciones import validar_pelicula
+
 
 class Pelicula:
     # Modelo simple para una pelicula.
@@ -59,6 +61,7 @@ class PeliculaManager:
             if ruta_archivo
             else base_dir / "data" / "peliculas.json"
         )
+        self.ultimo_error: list[str] = []
         self._asegurar_archivo()
 
     def _asegurar_archivo(self) -> None:
@@ -106,10 +109,20 @@ class PeliculaManager:
         # Retorna la lista actual de peliculas.
         return self.cargar_peliculas()
 
+    def _validar_pelicula(self, pelicula: dict) -> dict | None:
+        ok, mensajes, datos_validos = validar_pelicula(pelicula)
+        self.ultimo_error = mensajes
+        if not ok:
+            return None
+        return datos_validos
+
     def agregar_pelicula(self, pelicula: dict) -> bool:
         # Agrega una pelicula al almacenamiento.
+        pelicula_validada = self._validar_pelicula(pelicula)
+        if pelicula_validada is None:
+            return False
         peliculas = self.cargar_peliculas()
-        peliculas.append(pelicula)
+        peliculas.append(pelicula_validada)
         return self.guardar_peliculas(peliculas)
 
     def editar_pelicula(self, indice: int, pelicula: dict) -> bool:
@@ -118,7 +131,10 @@ class PeliculaManager:
         if indice < 0 or indice >= len(peliculas):
             # TODO: mejorar manejo de indices invalidos
             return False
-        peliculas[indice] = pelicula
+        pelicula_validada = self._validar_pelicula(pelicula)
+        if pelicula_validada is None:
+            return False
+        peliculas[indice] = pelicula_validada
         return self.guardar_peliculas(peliculas)
 
     def eliminar_pelicula(self, indice: int) -> bool:
