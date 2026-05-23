@@ -1,0 +1,3 @@
+SISTEMA DE GESTION DE CINE
+
+TODO: agregar logo ASCII o descripcion del logo
