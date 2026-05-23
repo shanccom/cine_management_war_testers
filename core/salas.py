@@ -1,9 +1,6 @@
 """
 Modelo base de salas.
-
-TODO: agregar metodos de negocio y validaciones.
 """
-
 
 class Sala:
     def __init__(
@@ -12,13 +9,23 @@ class Sala:
         numero: int = 0,
         capacidad: int = 0,
     ) -> None:
-        # TODO: validar datos de entrada
-        self.sala_id = sala_id
+        if type(numero) is not int:
+            raise TypeError("El numero de sala debe ser un numero entero")
+
+        if type(capacidad) is not int:
+            raise TypeError("La capacidad debe ser un numero entero")
+
+        if numero < 0:
+            raise ValueError("El numero de sala no puede ser negativo")
+
+        if capacidad < 1 or capacidad > 300:
+            raise ValueError("La capacidad de la sala debe estar entre 1 y 300")
+
+        self.sala_id = str(sala_id)
         self.numero = numero
         self.capacidad = capacidad
 
     def to_dict(self) -> dict:
-        # TODO: agregar campos adicionales cuando se requiera
         return {
             "sala_id": self.sala_id,
             "numero": self.numero,
@@ -27,7 +34,6 @@ class Sala:
 
     @staticmethod
     def from_dict(data: dict) -> "Sala":
-        # TODO: validar estructura de datos
         return Sala(
             sala_id=data.get("sala_id", ""),
             numero=data.get("numero", 0),
