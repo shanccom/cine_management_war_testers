@@ -97,7 +97,7 @@ def validar_payload_venta(payload: dict[str, Any]) -> dict[str, Any]:
         "fecha_hora": validar_fecha_hora(payload.get("fecha_hora")),
         "cliente_nombre": validar_nombre_cliente(payload.get("cliente_nombre")),
         "cliente_documento": validar_documento_identidad(payload.get("cliente_documento")),
-        "cliente_edad": validar_entero(payload.get("cliente_edad"), "cliente_edad", minimo=0),
+        "cliente_edad": validar_edad_cliente(payload.get("cliente_edad")),
         "cantidad_entradas": validar_entero(payload.get("cantidad_entradas"), "cantidad_entradas", minimo=MIN_POR_COMPRA, maximo=MAX_POR_COMPRA),
         "precio_unitario": validar_decimal(payload.get("precio_unitario"), "precio_unitario", minimo=0.0),
         "metodo_pago": validar_metodo_pago(payload.get("metodo_pago")),
@@ -132,6 +132,29 @@ def validar_documento_identidad(value: Any) -> str:
         raise ValueError("cliente_documento debe tener 8 digitos para DNI o 9 digitos para Carnet de Extranjeria")
 
     return texto
+
+
+def validar_edad_cliente(value: Any) -> int:
+    if value is None:
+        raise ValueError("cliente_edad no puede ser nulo")
+    if isinstance(value, bool):
+        raise TypeError("cliente_edad debe ser un entero")
+    if isinstance(value, str):
+        if value != value.strip():
+            raise ValueError("cliente_edad no debe tener espacios")
+        if not value:
+            raise ValueError("cliente_edad no puede estar vacio")
+        if not value.isdigit():
+            raise ValueError("cliente_edad debe contener solo numeros")
+        value = int(value)
+    elif not isinstance(value, int):
+        raise TypeError("cliente_edad debe ser un entero")
+
+    if value < 0:
+        raise ValueError("cliente_edad debe ser mayor o igual que 0")
+    if value > 120:
+        raise ValueError("cliente_edad debe ser menor o igual que 120")
+    return value
 
 
 def validar_nombre_cliente(value: Any) -> str:

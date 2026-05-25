@@ -344,6 +344,7 @@ class VentasUI:
                 precio_unitario=payload.get("precio_unitario", "0"),
                 cantidad_entradas=payload.get("cantidad_entradas", "0"),
                 tipo_cliente=payload.get("tipo_cliente", "general"),
+                cliente_edad=payload.get("cliente_edad", "0"),
             )
             self._render_result(
                 "Resumen de total",

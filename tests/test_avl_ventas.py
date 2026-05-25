@@ -90,8 +90,8 @@ def test_limite_edad_para_clasificacion_18(
 @pytest.mark.parametrize(
     "edad",
     [
-        0,
-        1,
+        5,
+        6,
         17,
         18,
         25,
@@ -100,9 +100,27 @@ def test_limite_edad_para_clasificacion_18(
     ],
 )
 def test_cliente_edad_valida_avl(ventas_service: VentasService, edad: int) -> None:
-    payload = _base_payload(cliente_edad=edad)
+    payload = _base_payload(cliente_edad=edad, restriccion_edad=0)
     result = ventas_service.comprar_entrada(payload)
     assert result["status"] == "ok", f"Edad valida rechazada: {edad!r} -> {result}"
+
+
+@pytest.mark.parametrize(
+    "edad",
+    [
+        0,
+        1,
+        2,
+        3,
+        4,
+    ],
+)
+def test_cliente_menor_de_cinco_no_paga_avl(ventas_service: VentasService, edad: int) -> None:
+    payload = _base_payload(cliente_edad=edad, restriccion_edad=0)
+    result = ventas_service.comprar_entrada(payload)
+    assert result["status"] == "ok"
+    assert result["total"] == pytest.approx(0.0)
+    assert "S/. 0.00" in result["ticket_texto"]
 
 
 @pytest.mark.parametrize(

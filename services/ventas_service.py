@@ -58,6 +58,7 @@ class VentasService:
         cantidad_entradas: int,
         tipo_cliente: str = "general",
         promociones: list[str] | None = None,
+        cliente_edad: int | None = None,
     ) -> dict[str, float]:
         cantidad_normalizada = validar_entero(
             cantidad_entradas,
@@ -75,6 +76,10 @@ class VentasService:
         descuentos = round(subtotal * descuento_base, 2)
         if "promo_grupal" in promociones and cantidad_normalizada >= 4:
             descuentos = round(descuentos + subtotal * 0.05, 2)
+
+        if cliente_edad is not None and cliente_edad < 5:
+            subtotal = 0.0
+            descuentos = 0.0
 
         recargos = 0.0
         impuestos = 0.0
@@ -124,6 +129,7 @@ class VentasService:
                 precio_unitario=data["precio_unitario"],
                 cantidad_entradas=data["cantidad_entradas"],
                 tipo_cliente=data["tipo_cliente"],
+                cliente_edad=data["cliente_edad"],
             )
 
             venta_id = f"V-{uuid4().hex.upper()}"
@@ -247,8 +253,9 @@ def calcular_total(
     cantidad_entradas: int,
     tipo_cliente: str = "general",
     promociones: list[str] | None = None,
+    cliente_edad: int | None = None,
 ) -> dict[str, float]:
-    return _DEFAULT_SERVICE.calcular_total(precio_unitario, cantidad_entradas, tipo_cliente, promociones)
+    return _DEFAULT_SERVICE.calcular_total(precio_unitario, cantidad_entradas, tipo_cliente, promociones, cliente_edad)
 
 
 def comprar_entrada(
