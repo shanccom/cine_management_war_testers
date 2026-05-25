@@ -111,6 +111,52 @@ def test_cliente_nombre_too_short_and_too_long_avl(ventas_service: VentasService
 
 
 @pytest.mark.parametrize(
+    "nombre",
+    [
+        "AB",
+        "Carlos",
+        "María",
+        "José",
+        "Zoë",
+        "Renée",
+        "李小龍",
+        "André",
+    ],
+)
+def test_cliente_nombre_valido_solo_letras_avl(ventas_service: VentasService, nombre: str) -> None:
+    payload = _base_payload(cliente_nombre=nombre)
+    result = ventas_service.comprar_entrada(payload)
+    assert result["status"] == "ok", f"Nombre valido rechazado: {nombre!r} -> {result}"
+
+
+@pytest.mark.parametrize(
+    "nombre",
+    [
+        "Juan Perez",
+        "María-José",
+        "O'Connor",
+        "Ana María",
+        "Alaa el-Din",
+        "123ABC",
+        "ABC123",
+        "<script>",
+        "DROP TABLE",
+        "\x00",
+        "\t",
+        "\n",
+        "😀",
+        "   Juan",
+        "Juan   ",
+    ],
+)
+def test_cliente_nombre_invalido_solo_letras_avl(ventas_service: VentasService, nombre: object) -> None:
+    payload = _base_payload(cliente_nombre=nombre)
+    result = ventas_service.comprar_entrada(payload)
+    assert result["status"] == "error"
+    assert result["codigo_error"] == "ERR_VALIDACION"
+
+
+@pytest.mark.parametrize(
     "documento, expected_status, expected_fragment",
     [
         ("1234567", "error", "8 digitos"),

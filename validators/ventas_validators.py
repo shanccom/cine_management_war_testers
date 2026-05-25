@@ -9,8 +9,6 @@ from numbers import Real
 from typing import Any
 
 from config.constants import MAX_POR_COMPRA, METODOS_PAGO_PERMITIDOS, MIN_POR_COMPRA
-import re
-import unicodedata
 
 
 def _raise_type_error(field_name: str, expected: str) -> None:
@@ -137,51 +135,23 @@ def validar_documento_identidad(value: Any) -> str:
 
 
 def validar_nombre_cliente(value: Any) -> str:
-    # Aceptar solo strings no vacios y sin espacios al inicio/fin; longitud razonable
     if value is None:
         raise ValueError("cliente_nombre no puede ser nulo")
     if not isinstance(value, str):
         raise TypeError("cliente_nombre debe ser una cadena de texto")
 
-    # Detect control characters (incluye null, tabs, newlines)
-    if re.search(r"[\x00-\x1f\x7f]", value):
-        raise ValueError("cliente_nombre contiene caracteres de control no permitidos")
-
-    # No permitir espacios al inicio o final
-    if value != value.strip():
+    texto = value.strip()
+    if not texto:
+        raise ValueError("cliente_nombre no puede estar vacio")
+    if texto != value:
         raise ValueError("cliente_nombre no debe tener espacios al inicio o al final")
 
-    # No permitir multiples espacios consecutivos
-    if re.search(r"\s{2,}", value):
-        raise ValueError("cliente_nombre contiene multiples espacios consecutivos")
-
-    # Longitud minima y maxima razonable
-    length = len(value)
-    if length < 2:
+    if len(texto) < 2:
         raise ValueError("cliente_nombre demasiado corto")
-    if length > 1024:
+    if len(texto) > 1024:
         raise ValueError("cliente_nombre demasiado largo")
 
-    # Rechazar nombres puramente numericos
-    if value.isnumeric():
-        raise ValueError("cliente_nombre no puede ser solo numeros")
+    if not texto.isalpha():
+        raise ValueError("cliente_nombre solo puede contener letras")
 
-    # Rechazar patrones tipicos de inyeccion o rutas
-    blacklist = ["<script", "drop table", "select *", "../", "..\\", "onerror", "passwd", "\\x00"]
-    lowered = value.lower()
-    for bad in blacklist:
-        if bad in lowered:
-            raise ValueError("cliente_nombre contiene texto no permitido")
-
-    # Rechazar caracteres peligrosos sueltos
-    forbidden_chars = set("<>;=*$%/\\\"\x00\n\r\t\x1f")
-    for ch in value:
-        if ch in forbidden_chars:
-            raise ValueError("cliente_nombre contiene caracteres no permitidos")
-
-    # Aceptar nombres Unicode: comprobar que al menos un caracter es letra
-    has_letter = any(unicodedata.category(ch).startswith("L") for ch in value)
-    if not has_letter:
-        raise ValueError("cliente_nombre debe contener letras")
-
-    return value
+    return texto
