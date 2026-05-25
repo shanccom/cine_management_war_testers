@@ -19,6 +19,7 @@ class VentasUI:
         self.parent = parent
         self.service = service or VentasService()
         self.window: tk.Toplevel | None = None
+        self._clock_job: str | None = None
         self.fields: dict[str, tk.StringVar] = {}
         self.result_text: tk.Text | None = None
         self.movie_combo: ttk.Combobox | None = None
@@ -38,11 +39,16 @@ class VentasUI:
         self.window.title("Venta de Entradas")
         self.window.geometry("980x760")
         self.window.configure(bg="#f2f2f2")
-        self.window.protocol("WM_DELETE_WINDOW", self.window.withdraw)
+        self.window.protocol("WM_DELETE_WINDOW", self._hide_window)
 
         self._build_catalogs()
         self._build_form()
         self._set_default_values()
+        self._start_clock()
+
+    def _hide_window(self) -> None:
+        if self.window is not None:
+            self.window.withdraw()
 
     def _build_catalogs(self) -> None:
         self.movie_lookup = self._load_movie_catalog()
@@ -141,7 +147,8 @@ class VentasUI:
             "capacidad_sala": tk.StringVar(),
             "ocupadas_actuales": tk.StringVar(),
             "funcion_id": tk.StringVar(),
-            "fecha_hora": tk.StringVar(),
+            "fecha": tk.StringVar(),
+            "hora": tk.StringVar(),
             "cliente_nombre": tk.StringVar(),
             "cliente_documento": tk.StringVar(),
             "cliente_edad": tk.StringVar(),
@@ -155,7 +162,8 @@ class VentasUI:
             ("pelicula_combo", "Pelicula"),
             ("sala_combo", "Sala"),
             ("funcion_id", "Funcion ID"),
-            ("fecha_hora", "Fecha y hora ISO"),
+            ("fecha", "Fecha"),
+            ("hora", "Hora"),
             ("cliente_nombre", "Cliente nombre"),
             ("cliente_documento", "Cliente documento"),
             ("cliente_edad", "Cliente edad"),
@@ -180,6 +188,9 @@ class VentasUI:
             elif key == "metodo_pago":
                 combo = ttk.Combobox(form, textvariable=self.fields[key], values=("efectivo", "tarjeta", "transferencia"), state="readonly", width=36)
                 combo.grid(row=row, column=col + 1, sticky="ew", padx=(0, 14), pady=4)
+            elif key in {"fecha", "hora"}:
+                entry = tk.Entry(form, textvariable=self.fields[key], width=18, state="readonly")
+                entry.grid(row=row, column=col + 1, sticky="w", padx=(0, 14), pady=4)
             else:
                 entry = tk.Entry(form, textvariable=self.fields[key], width=40)
                 entry.grid(row=row, column=col + 1, sticky="ew", padx=(0, 14), pady=4)
@@ -219,9 +230,7 @@ class VentasUI:
         container.grid_rowconfigure(5, weight=1)
 
     def _set_default_values(self) -> None:
-        now = datetime.now().replace(microsecond=0).isoformat(timespec="seconds")
         defaults = {
-            "fecha_hora": now,
             "metodo_pago": "efectivo",
             "tipo_cliente": "general",
             "cantidad_entradas": "1",
@@ -231,12 +240,25 @@ class VentasUI:
         for key, value in defaults.items():
             self.fields[key].set(value)
 
+        self._sync_datetime_fields()
+
         if self.movie_combo and self.movie_combo["values"]:
             self.movie_combo.current(0)
             self._on_movie_selected()
         if self.room_combo and self.room_combo["values"]:
             self.room_combo.current(0)
             self._on_room_selected()
+
+    def _sync_datetime_fields(self) -> None:
+        current = datetime.now().replace(microsecond=0)
+        self.fields["fecha"].set(current.strftime("%Y-%m-%d"))
+        self.fields["hora"].set(current.strftime("%H:%M:%S"))
+
+    def _start_clock(self) -> None:
+        self._sync_datetime_fields()
+        if self.window is None or not self.window.winfo_exists():
+            return
+        self._clock_job = self.window.after(1000, self._start_clock)
 
     def _current_movie(self) -> dict[str, str]:
         selected = self.movie_combo.get() if self.movie_combo else ""
@@ -270,6 +292,9 @@ class VentasUI:
     def _collect_payload(self) -> dict[str, str]:
         payload = {key: var.get() for key, var in self.fields.items()}
         payload.pop("venta_id_buscar", None)
+        fecha = payload.pop("fecha", "")
+        hora = payload.pop("hora", "")
+        payload["fecha_hora"] = f"{fecha}T{hora}"
         return payload
 
     def _render_result(self, title: str, message: str) -> None:
@@ -332,8 +357,8 @@ class VentasUI:
                 var.set("efectivo")
             elif key == "tipo_cliente":
                 var.set("general")
-            elif key == "fecha_hora":
-                var.set(datetime.now().replace(microsecond=0).isoformat(timespec="seconds"))
+            elif key in {"fecha", "hora"}:
+                self._sync_datetime_fields()
             elif key in {"cantidad_entradas"}:
                 var.set("1")
             elif key in {"cliente_edad"}:
