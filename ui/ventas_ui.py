@@ -21,6 +21,7 @@ class VentasUI:
         self.window: tk.Toplevel | None = None
         self._clock_job: str | None = None
         self.fields: dict[str, tk.StringVar] = {}
+        self._doc_entries: dict[str, tk.Entry] = {}
         self.result_text: tk.Text | None = None
         self.movie_combo: ttk.Combobox | None = None
         self.room_combo: ttk.Combobox | None = None
@@ -155,7 +156,9 @@ class VentasUI:
             "fecha": tk.StringVar(),
             "hora": tk.StringVar(),
             "cliente_nombre": tk.StringVar(),
-            "cliente_documento": tk.StringVar(),
+            "documento_tipo": tk.StringVar(value="dni"),
+            "cliente_documento_dni": tk.StringVar(),
+            "cliente_documento_carnet": tk.StringVar(),
             "cliente_edad": tk.StringVar(),
             "cantidad_entradas": tk.StringVar(),
             "metodo_pago": tk.StringVar(),
@@ -169,7 +172,7 @@ class VentasUI:
             ("fecha", "Fecha"),
             ("hora", "Hora"),
             ("cliente_nombre", "Cliente nombre"),
-            ("cliente_documento", "Cliente documento"),
+            ("cliente_documento", "Cliente documento (DNI/Carnet)"),
             ("cliente_edad", "Cliente edad"),
             ("cantidad_entradas", "Cantidad entradas"),
             ("metodo_pago", "Metodo pago"),
@@ -189,6 +192,19 @@ class VentasUI:
                 self.room_combo = ttk.Combobox(form, values=tuple(self.room_lookup.keys()), state="readonly", width=36)
                 self.room_combo.grid(row=row, column=col + 1, sticky="ew", padx=(0, 14), pady=4)
                 self.room_combo.bind("<<ComboboxSelected>>", self._on_room_selected)
+            elif key == "cliente_documento":
+                sub = tk.Frame(form, bg="#f2f2f2")
+                sub.grid(row=row, column=col + 1, sticky="w", padx=(0, 14), pady=4)
+                v = self.fields["documento_tipo"]
+                rb1 = tk.Radiobutton(sub, text="DNI", variable=v, value="dni", bg="#f2f2f2", command=self._on_document_type_changed)
+                rb1.pack(side="left")
+                entry_dni = tk.Entry(sub, textvariable=self.fields["cliente_documento_dni"], width=18)
+                entry_dni.pack(side="left", padx=(6, 10))
+                rb2 = tk.Radiobutton(sub, text="Carnet ext.", variable=v, value="carnet", bg="#f2f2f2", command=self._on_document_type_changed)
+                rb2.pack(side="left")
+                entry_carnet = tk.Entry(sub, textvariable=self.fields["cliente_documento_carnet"], width=18)
+                entry_carnet.pack(side="left", padx=(6, 0))
+                self._doc_entries = {"dni": entry_dni, "carnet": entry_carnet}
             elif key == "metodo_pago":
                 combo = ttk.Combobox(form, textvariable=self.fields[key], values=("efectivo",), state="readonly", width=36)
                 combo.grid(row=row, column=col + 1, sticky="ew", padx=(0, 14), pady=4)
@@ -244,6 +260,10 @@ class VentasUI:
         for key, value in defaults.items():
             self.fields[key].set(value)
 
+        # default documento tipo
+        if "documento_tipo" in self.fields:
+            self.fields["documento_tipo"].set("dni")
+
         self._sync_datetime_fields()
 
         if self.movie_combo and self.movie_combo["values"]:
@@ -252,6 +272,8 @@ class VentasUI:
         if self.room_combo and self.room_combo["values"]:
             self.room_combo.current(0)
             self._on_room_selected()
+        # ensure document entries reflect the tipo
+        self._on_document_type_changed()
 
     def _sync_datetime_fields(self) -> None:
         current = datetime.now().replace(microsecond=0)
@@ -300,6 +322,11 @@ class VentasUI:
         fecha = payload.pop("fecha", "")
         hora = payload.pop("hora", "")
         payload["fecha_hora"] = f"{fecha}T{hora}"
+        # assemble cliente_documento from selected tipo
+        tipo = payload.pop("documento_tipo", "dni")
+        dni = payload.pop("cliente_documento_dni", "")
+        carnet = payload.pop("cliente_documento_carnet", "")
+        payload["cliente_documento"] = dni if tipo == "dni" else carnet
         return payload
 
     def _render_result(self, title: str, message: str) -> None:
@@ -368,6 +395,12 @@ class VentasUI:
                 var.set("1")
             elif key in {"cliente_edad"}:
                 var.set("18")
+            elif key == "documento_tipo":
+                var.set("dni")
+            elif key == "cliente_documento_dni":
+                var.set("")
+            elif key == "cliente_documento_carnet":
+                var.set("")
             elif key in {"precio_unitario", "restriccion_edad", "capacidad_sala", "ocupadas_actuales", "sala_numero"}:
                 var.set("0")
             else:
@@ -379,4 +412,16 @@ class VentasUI:
         if self.room_combo and self.room_combo["values"]:
             self.room_combo.current(0)
             self._on_room_selected()
+        self._on_document_type_changed()
         self._render_result("Formulario limpio", "Los campos han sido reiniciados.")
+
+    def _on_document_type_changed(self) -> None:
+        # Enable the selected entry and disable the other
+        tipo = self.fields.get("documento_tipo", tk.StringVar()).get()
+        if not self._doc_entries:
+            return
+        for key, entry in self._doc_entries.items():
+            if key == tipo:
+                entry.configure(state="normal")
+            else:
+                entry.configure(state="disabled")
