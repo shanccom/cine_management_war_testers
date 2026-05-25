@@ -201,7 +201,7 @@ def test_cliente_nombre_no_crashea_pe(ventas_service: VentasService) -> None:
         ("12345678", "ok", None),
         ("123456789", "ok", None),
         ("00000000", "ok", None),
-        (" 12345678 ", "ok", None),
+        (" 12345678 ", "error", "espacios"),
         ("1234567", "error", "8 digitos"),
         ("1234567890", "error", "8 digitos"),
         ("12A45678", "error", "solo numeros"),

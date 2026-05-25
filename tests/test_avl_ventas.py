@@ -158,4 +158,7 @@ def test_documento_solo_numeros_y_sin_simbolos_avl(ventas_service: VentasService
     result = ventas_service.comprar_entrada(payload)
     assert result["status"] == "error"
     assert result["codigo_error"] == "ERR_VALIDACION"
-    assert "numeros" in result["mensaje"].lower() or "cadena" in result["mensaje"].lower() or "nulo" in result["mensaje"].lower()
+    assert any(
+        fragment in result["mensaje"].lower()
+        for fragment in ("numeros", "cadena", "nulo", "espacios")
+    )
