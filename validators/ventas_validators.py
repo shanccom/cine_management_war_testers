@@ -152,8 +152,8 @@ def validar_edad_cliente(value: Any) -> int:
 
     if value < 0:
         raise ValueError("cliente_edad debe ser mayor o igual que 0")
-    if value > 120:
-        raise ValueError("cliente_edad debe ser menor o igual que 120")
+    if value > 110:
+        raise ValueError("cliente_edad debe ser menor o igual que 110")
     return value
 
 

@@ -97,7 +97,7 @@ def test_clases_invalidas(
         18,
         25,
         99,
-        120,
+        110,
     ],
 )
 def test_cliente_edad_valida_pe(ventas_service: VentasService, edad: int) -> None:
@@ -143,7 +143,7 @@ def test_cliente_menor_de_cinco_no_paga_pe(ventas_service: VentasService, edad: 
         float("nan"),
         float("inf"),
         18.5,
-        121,
+        111,
         9999,
         "1e2",
         "--10",
