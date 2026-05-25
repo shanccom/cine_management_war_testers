@@ -98,7 +98,7 @@ def validar_payload_venta(payload: dict[str, Any]) -> dict[str, Any]:
         "funcion_id": validar_texto_no_vacio(payload.get("funcion_id"), "funcion_id"),
         "fecha_hora": validar_fecha_hora(payload.get("fecha_hora")),
         "cliente_nombre": validar_nombre_cliente(payload.get("cliente_nombre")),
-        "cliente_documento": validar_texto_no_vacio(payload.get("cliente_documento"), "cliente_documento"),
+        "cliente_documento": validar_documento_identidad(payload.get("cliente_documento")),
         "cliente_edad": validar_entero(payload.get("cliente_edad"), "cliente_edad", minimo=0),
         "cantidad_entradas": validar_entero(payload.get("cantidad_entradas"), "cantidad_entradas", minimo=MIN_POR_COMPRA, maximo=MAX_POR_COMPRA),
         "precio_unitario": validar_decimal(payload.get("precio_unitario"), "precio_unitario", minimo=0.0),
@@ -111,6 +111,27 @@ def validar_payload_venta(payload: dict[str, Any]) -> dict[str, Any]:
 
     validated["tipo_cliente"] = validated["tipo_cliente"].lower()
     return validated
+
+
+def validar_documento_identidad(value: Any) -> str:
+    if value is None:
+        raise ValueError("cliente_documento no puede ser nulo")
+    if isinstance(value, bool):
+        raise TypeError("cliente_documento debe ser una cadena de texto")
+    if not isinstance(value, str):
+        raise TypeError("cliente_documento debe ser una cadena de texto")
+
+    texto = value.strip()
+    if not texto:
+        raise ValueError("cliente_documento no puede estar vacio")
+
+    if not texto.isdigit():
+        raise ValueError("cliente_documento debe contener solo numeros")
+
+    if len(texto) not in (8, 9):
+        raise ValueError("cliente_documento debe tener 8 digitos para DNI o 9 digitos para Carnet de Extranjeria")
+
+    return texto
 
 
 def validar_nombre_cliente(value: Any) -> str:

@@ -108,3 +108,46 @@ def test_cliente_nombre_too_short_and_too_long_avl(ventas_service: VentasService
     res_long = ventas_service.comprar_entrada(payload_long)
     assert res_long["status"] == "error"
     assert res_long["codigo_error"] == "ERR_VALIDACION"
+
+
+@pytest.mark.parametrize(
+    "documento, expected_status",
+    [
+        ("1234567", "error"),
+        ("12345678", "ok"),
+        ("123456789", "ok"),
+        ("1234567890", "error"),
+        ("00000000", "ok"),
+        ("000000000", "ok"),
+    ],
+)
+def test_limites_documento_dni_carnet_avl(ventas_service: VentasService, documento: str, expected_status: str) -> None:
+    payload = _base_payload(cliente_documento=documento)
+    result = ventas_service.comprar_entrada(payload)
+    assert result["status"] == expected_status
+    if expected_status == "error":
+        assert result["codigo_error"] == "ERR_VALIDACION"
+
+
+@pytest.mark.parametrize(
+    "documento",
+    [
+        "12A45678",
+        "12-45678",
+        "1234 678",
+        "1234567a",
+        "1234567.",
+        "<script>",
+        "../../123",
+        " 12345678 ",
+        True,
+        None,
+        ["12345678"],
+        {"doc": "12345678"},
+    ],
+)
+def test_documento_solo_numeros_y_sin_simbolos_avl(ventas_service: VentasService, documento: object) -> None:
+    payload = _base_payload(cliente_documento=documento)
+    result = ventas_service.comprar_entrada(payload)
+    assert result["status"] == "error"
+    assert result["codigo_error"] == "ERR_VALIDACION"

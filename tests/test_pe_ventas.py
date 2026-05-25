@@ -193,3 +193,45 @@ def test_cliente_nombre_no_crashea_pe(ventas_service: VentasService) -> None:
     payload = _base_payload(cliente_nombre=huge)
     result = ventas_service.comprar_entrada(payload)
     assert result["status"] in ("error", "ok")
+
+
+@pytest.mark.parametrize(
+    "documento, expected_status",
+    [
+        ("12345678", "ok"),
+        ("123456789", "ok"),
+        ("00000000", "ok"),
+        ("1234567", "error"),
+        ("1234567890", "error"),
+        ("12A45678", "error"),
+        ("12-45678", "error"),
+        (" 12345678 ", "ok"),
+        ("", "error"),
+        (None, "error"),
+        (True, "error"),
+        (["12345678"], "error"),
+        ({"doc": "12345678"}, "error"),
+    ],
+)
+def test_cliente_documento_pe(ventas_service: VentasService, documento: object, expected_status: str) -> None:
+    payload = _base_payload(cliente_documento=documento)
+    result = ventas_service.comprar_entrada(payload)
+    assert result["status"] == expected_status
+    if expected_status == "error":
+        assert result["codigo_error"] == "ERR_VALIDACION"
+
+
+@pytest.mark.parametrize(
+    "documento",
+    [
+        "12345678",
+        "123456789",
+        "87654321",
+        "999999999",
+    ],
+)
+def test_cliente_documento_solo_numeros_pe(ventas_service: VentasService, documento: str) -> None:
+    payload = _base_payload(cliente_documento=documento)
+    result = ventas_service.comprar_entrada(payload)
+    assert result["status"] == "ok"
+
