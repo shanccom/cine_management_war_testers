@@ -1,6 +1,4 @@
-"""
-Pruebas de Particion de Equivalencia para ventas.
-"""
+"""Pruebas de Particion de Equivalencia para ventas con pytest."""
 
 from __future__ import annotations
 
@@ -67,6 +65,7 @@ def test_clases_validas(
     assert result["status"] == expected_status
     assert result["venta_id"].startswith("V-")
     assert "TICKET DE VENTA" in result["ticket_texto"]
+    assert "S/." in result["ticket_texto"]
 
 
 @pytest.mark.parametrize(
@@ -89,6 +88,16 @@ def test_clases_invalidas(
 
     assert result["status"] == "error"
     assert result["codigo_error"] == codigo_error
+
+
+def test_metodo_pago_solo_efectivo(ventas_service: VentasService) -> None:
+    payload = _base_payload(metodo_pago="tarjeta")
+
+    result = ventas_service.comprar_entrada(payload)
+
+    assert result["status"] == "error"
+    assert result["codigo_error"] == "ERR_VALIDACION"
+    assert "efectivo" in result["mensaje"].lower()
 
 
 def test_ticket_se_recupera_despues_de_compra(ventas_service: VentasService) -> None:

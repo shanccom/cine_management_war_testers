@@ -28,6 +28,10 @@ class VentasUI:
         self.room_lookup: dict[str, dict[str, str]] = {}
         self.summary_var = tk.StringVar(master=self.parent, value="Selecciona una pelicula para cargar precio y restriccion.")
 
+    @staticmethod
+    def _format_currency(amount: float) -> str:
+        return f"S/. {amount:.2f}"
+
     def show(self) -> None:
         if self.window is not None and self.window.winfo_exists():
             self.window.deiconify()
@@ -277,7 +281,7 @@ class VentasUI:
         self.fields["precio_unitario"].set(movie.get("precio_unitario", "0.00"))
         self.fields["restriccion_edad"].set(movie.get("restriccion_edad", "0"))
         self.summary_var.set(
-            f"Pelicula seleccionada: {movie.get('titulo', '')} | Precio: ${movie.get('precio_unitario', '0.00')} | Restriccion: +{movie.get('restriccion_edad', '0')}"
+            f"Pelicula seleccionada: {movie.get('titulo', '')} | Precio: {self._format_currency(float(movie.get('precio_unitario', '0.00')))} | Restriccion: +{movie.get('restriccion_edad', '0')}"
         )
 
     def _on_room_selected(self, _event: object | None = None) -> None:
@@ -316,11 +320,11 @@ class VentasUI:
             )
             self._render_result(
                 "Resumen de total",
-                f"Subtotal: {result['subtotal']:.2f}\n"
-                f"Descuentos: {result['descuentos']:.2f}\n"
-                f"Recargos: {result['recargos']:.2f}\n"
-                f"Impuestos: {result['impuestos']:.2f}\n"
-                f"Total: {result['total']:.2f}",
+                f"Subtotal: {self._format_currency(result['subtotal'])}\n"
+                f"Descuentos: {self._format_currency(result['descuentos'])}\n"
+                f"Recargos: {self._format_currency(result['recargos'])}\n"
+                f"Impuestos: {self._format_currency(result['impuestos'])}\n"
+                f"Total: {self._format_currency(result['total'])}",
             )
         except Exception as exc:  # pragma: no cover - defensivo de UI
             messagebox.showerror("Error", str(exc))

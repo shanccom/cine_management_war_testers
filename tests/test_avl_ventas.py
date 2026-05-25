@@ -1,6 +1,4 @@
-"""
-Pruebas de Analisis de Valores Limite para ventas.
-"""
+"""Pruebas de Analisis de Valores Limite para ventas con pytest."""
 
 from __future__ import annotations
 
@@ -87,3 +85,13 @@ def test_limite_edad_para_clasificacion_18(
     else:
         assert result["status"] == "error"
         assert result["codigo_error"] == expected_error
+
+
+def test_monto_en_soles_en_ticket(ventas_service: VentasService) -> None:
+    payload = _base_payload(precio_unitario=42.5, cantidad_entradas=2)
+
+    result = ventas_service.comprar_entrada(payload)
+
+    assert result["status"] == "ok"
+    assert "S/." in result["ticket_texto"]
+    assert result["total"] == pytest.approx(85.0)

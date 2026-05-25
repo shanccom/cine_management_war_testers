@@ -42,7 +42,7 @@ def _formatear_ticket(venta: Venta) -> str:
         f"Cliente: {venta.cliente_nombre} - {venta.cliente_documento}",
         f"Cantidad: {venta.cantidad}",
         f"Metodo de pago: {venta.metodo_pago}",
-        f"Total: {venta.total:.2f}",
+        f"Total: S/. {venta.total:.2f}",
         f"Estado: {venta.estado}",
     ]
     return "\n".join(lines)
