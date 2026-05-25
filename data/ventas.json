@@ -134,6 +134,33 @@
       "ticket_texto": "TICKET DE VENTA\nVenta ID: V-C0B3E20FB8204B4F850940A73EA35DB7\nPelicula: Oppenheimer (P001)\nSala: S1\nFuncion: F-1\nFecha y hora: 2026-05-24T21:50:37\nCliente: Benja - 223ñaldksfjñaslfalñsdfkjañdlskfjafdlks\nCantidad: 1\nMetodo de pago: efectivo\nTotal: S/. 32.00\nEstado: registrada",
       "timestamp": "2026-05-24T21:50:37",
       "_schema_version": 1
+    },
+    {
+      "venta_id": "V-6D91B30126B64324B9CAFF00F8A585D0",
+      "pelicula_id": "P001",
+      "pelicula_titulo": "Oppenheimer",
+      "sala_id": "S1",
+      "sala_numero": 1,
+      "funcion_id": "F-1",
+      "fecha_hora": "2026-05-24T22:11:54",
+      "cliente": {
+        "nombre": "3232",
+        "documento": "ñalsdkfjñs",
+        "edad": 18
+      },
+      "cantidad": 9,
+      "precio_unitario": 32.0,
+      "subtotal": 288.0,
+      "descuentos": 0.0,
+      "recargos": 0.0,
+      "impuestos": 0.0,
+      "total": 288.0,
+      "metodo_pago": "efectivo",
+      "restriccion_edad": 15,
+      "estado": "registrada",
+      "ticket_texto": "TICKET DE VENTA\nVenta ID: V-6D91B30126B64324B9CAFF00F8A585D0\nPelicula: Oppenheimer (P001)\nSala: S1\nFuncion: F-1\nFecha y hora: 2026-05-24T22:11:54\nCliente: 3232 - ñalsdkfjñs\nCantidad: 9\nMetodo de pago: efectivo\nTotal: S/. 288.00\nEstado: registrada",
+      "timestamp": "2026-05-24T22:11:54",
+      "_schema_version": 1
     }
   ],
   "_todo": "Agregar ventas de ejemplo",
