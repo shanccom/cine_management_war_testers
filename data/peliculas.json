@@ -1,3 +1,40 @@
 {
-  "items": []
+  "items": [
+    {
+      "pelicula_id": "P001",
+      "id": "P001",
+      "titulo": "Oppenheimer",
+      "nombre": "Oppenheimer",
+      "genero": "Drama",
+      "duracion": 180,
+      "clasificacion": "+14",
+      "sala": 1,
+      "precio_unitario": 32.0,
+      "restriccion_edad": 15
+    },
+    {
+      "pelicula_id": "P002",
+      "id": "P002",
+      "titulo": "Intensamente 2",
+      "nombre": "Intensamente",
+      "genero": "Comedia",
+      "duracion": 96,
+      "clasificacion": "ATP",
+      "sala": 1,
+      "precio_unitario": 24.0,
+      "restriccion_edad": 0
+    },
+    {
+      "pelicula_id": "P003",
+      "id": "P003",
+      "titulo": "Deadpool y Wolverine",
+      "nombre": "Deadpool Wolverine",
+      "genero": "Accion",
+      "duracion": 128,
+      "clasificacion": "+18",
+      "sala": 2,
+      "precio_unitario": 35.0,
+      "restriccion_edad": 18
+    }
+  ]
 }
