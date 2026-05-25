@@ -1,5 +1,5 @@
 """
-Modelo base de salas y gestion de asientos con validacion Regex.
+Modelo base de salas y gestion de asientos con blindaje sintactico y semantico.
 """
 
 import re
@@ -43,7 +43,7 @@ class Sala:
     def reservar_asiento(self, asiento_id: str) -> bool:
         """
         Reserva un asiento especifico en la sala.
-        Valida el tipo, formato Regex, disponibilidad y duplicados.
+        Valida el tipo, formato Regex, consistencia semantica y duplicados.
         """
         if type(asiento_id) is not str:
             raise TypeError("El identificador del asiento debe ser un texto")
@@ -52,12 +52,15 @@ class Sala:
         if not asiento_limpio:
             raise ValueError("El codigo de asiento no puede estar vacio")
 
-        # 4. Validacion de Formato Estricto (Regex)
-        # ^[A-Z]    -> Debe empezar con una letra mayuscula de la A a la Z.
-        # \d{1,2}$  -> Debe terminar obligatoriamente con 1 o 2 digitos numericos (ej: A1, B12).
+        # 4. Validacion de Formato (Sintaxis - Regex)
         patron_asiento = r"^[A-Z]\d{1,2}$"
         if not re.match(patron_asiento, asiento_limpio):
             raise ValueError("El formato del asiento debe ser una letra seguida de uno o dos numeros (ej: A1, B12)")
+
+        # 5. Validacion de Consistencia (Semantica)
+        numero_asiento = int(asiento_limpio[1:])
+        if numero_asiento > self.capacidad:
+            raise ValueError(f"El numero de asiento ({numero_asiento}) no puede exceder la capacidad maxima de la sala ({self.capacidad})")
 
         if len(self.asientos_ocupados) >= self.capacidad:
             raise ValueError("No se pueden reservar mas asientos, la sala esta llena")

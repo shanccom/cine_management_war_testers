@@ -72,3 +72,15 @@ def test_pe_asiento_duplicado(sala_prueba: Sala) -> None:
     with pytest.raises(ValueError) as context:
         sala_prueba.reservar_asiento("A1")
     assert "ya se encuentra reservado" in str(context.value)
+
+def test_pe_asiento_fuera_de_capacidad_logica() -> None:
+    """
+    Clase Invalida: Un asiento con formato correcto pero numero incoherente (ej: Z99 en capacidad 2).
+    Resultado Esperado: Rechazo con ValueError por inconsistencia semantica.
+    """
+    # Creamos la sala de pruebas local aqui adentro
+    sala_pequena = Sala(sala_id="S5", numero=5, capacidad=2)
+    
+    with pytest.raises(ValueError) as context:
+        sala_pequena.reservar_asiento("Z99")
+    assert "no puede exceder la capacidad maxima" in str(context.value)
