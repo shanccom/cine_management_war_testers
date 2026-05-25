@@ -1,4 +1,60 @@
 {
-  "items": [],
-  "_todo": "Agregar ventas de ejemplo"
+  "items": [
+    {
+      "venta_id": "V-1D90B9110B294747A4AFE41DB13A5683",
+      "pelicula_id": "P002",
+      "pelicula_titulo": "Intensamente 2",
+      "sala_id": "S1",
+      "sala_numero": 1,
+      "funcion_id": "2",
+      "fecha_hora": "2026-05-24T21:23:06",
+      "cliente": {
+        "nombre": "Juan",
+        "documento": "88402adfañsldfjñ",
+        "edad": 18
+      },
+      "cantidad": 1,
+      "precio_unitario": 24.0,
+      "subtotal": 24.0,
+      "descuentos": 0.0,
+      "recargos": 0.0,
+      "impuestos": 0.0,
+      "total": 24.0,
+      "metodo_pago": "tarjeta",
+      "restriccion_edad": 0,
+      "estado": "registrada",
+      "ticket_texto": "TICKET DE VENTA\nVenta ID: V-1D90B9110B294747A4AFE41DB13A5683\nPelicula: Intensamente 2 (P002)\nSala: S1\nFuncion: 2\nFecha y hora: 2026-05-24T21:23:06\nCliente: Juan - 88402adfañsldfjñ\nCantidad: 1\nMetodo de pago: tarjeta\nTotal: 24.00\nEstado: registrada",
+      "timestamp": "2026-05-24T21:23:41",
+      "_schema_version": 1
+    },
+    {
+      "venta_id": "V-0A804F82663741B3A42E0BA50F522F25",
+      "pelicula_id": "P002",
+      "pelicula_titulo": "Intensamente 2",
+      "sala_id": "S1",
+      "sala_numero": 1,
+      "funcion_id": "2",
+      "fecha_hora": "2026-05-24T21:23:06",
+      "cliente": {
+        "nombre": "Juan",
+        "documento": "88402adfañsldfjñ",
+        "edad": 18
+      },
+      "cantidad": 1,
+      "precio_unitario": 24.0,
+      "subtotal": 24.0,
+      "descuentos": 0.0,
+      "recargos": 0.0,
+      "impuestos": 0.0,
+      "total": 24.0,
+      "metodo_pago": "tarjeta",
+      "restriccion_edad": 0,
+      "estado": "registrada",
+      "ticket_texto": "TICKET DE VENTA\nVenta ID: V-0A804F82663741B3A42E0BA50F522F25\nPelicula: Intensamente 2 (P002)\nSala: S1\nFuncion: 2\nFecha y hora: 2026-05-24T21:23:06\nCliente: Juan - 88402adfañsldfjñ\nCantidad: 1\nMetodo de pago: tarjeta\nTotal: 24.00\nEstado: registrada",
+      "timestamp": "2026-05-24T21:23:55",
+      "_schema_version": 1
+    }
+  ],
+  "_todo": "Agregar ventas de ejemplo",
+  "_schema_version": 1
 }

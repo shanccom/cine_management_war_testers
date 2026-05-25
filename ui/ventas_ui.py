@@ -161,7 +161,6 @@ class VentasUI:
             ("cliente_edad", "Cliente edad"),
             ("cantidad_entradas", "Cantidad entradas"),
             ("metodo_pago", "Metodo pago"),
-            ("venta_id_buscar", "Venta ID para ticket"),
         ]
 
         for index, (key, label_text) in enumerate(visible_labels):
@@ -195,23 +194,29 @@ class VentasUI:
         )
         summary.grid(row=2, column=0, columnspan=4, sticky="w", pady=(8, 6))
 
+        ticket_frame = tk.LabelFrame(container, text="Ticket", bg="#f2f2f2", fg="#333333", padx=10, pady=8)
+        ticket_frame.grid(row=3, column=0, columnspan=4, sticky="ew", pady=(8, 10))
+
+        tk.Label(ticket_frame, text="Venta ID", bg="#f2f2f2", fg="#333333").grid(row=0, column=0, sticky="w", padx=(0, 8))
+        tk.Entry(ticket_frame, textvariable=self.fields["venta_id_buscar"], width=42).grid(row=0, column=1, sticky="w", padx=(0, 8))
+        tk.Button(ticket_frame, text="Mostrar ticket", command=self._on_mostrar_ticket, bg="#d9d9d9", relief="flat", padx=12, pady=6).grid(row=0, column=2, sticky="w")
+
         button_frame = tk.Frame(container, bg="#f2f2f2")
-        button_frame.grid(row=3, column=0, columnspan=4, sticky="w", pady=(8, 10))
+        button_frame.grid(row=4, column=0, columnspan=4, sticky="w", pady=(8, 10))
 
         tk.Button(button_frame, text="Calcular total", command=self._on_calcular_total, bg="#d9d9d9", relief="flat", padx=12, pady=6).pack(side="left", padx=(0, 8))
         tk.Button(button_frame, text="Comprar entrada", command=self._on_comprar, bg="#cfe8cf", relief="flat", padx=12, pady=6).pack(side="left", padx=(0, 8))
-        tk.Button(button_frame, text="Mostrar ticket", command=self._on_mostrar_ticket, bg="#d9d9d9", relief="flat", padx=12, pady=6).pack(side="left", padx=(0, 8))
         tk.Button(button_frame, text="Limpiar", command=self._clear_form, bg="#e8d6cf", relief="flat", padx=12, pady=6).pack(side="left")
 
         self.result_text = tk.Text(container, height=18, width=100, wrap="word")
-        self.result_text.grid(row=4, column=0, columnspan=4, sticky="nsew", pady=(10, 0))
+        self.result_text.grid(row=5, column=0, columnspan=4, sticky="nsew", pady=(10, 0))
         self.result_text.configure(state="disabled")
 
         container.grid_columnconfigure(0, weight=1)
         container.grid_columnconfigure(1, weight=1)
         container.grid_columnconfigure(2, weight=1)
         container.grid_columnconfigure(3, weight=1)
-        container.grid_rowconfigure(4, weight=1)
+        container.grid_rowconfigure(5, weight=1)
 
     def _set_default_values(self) -> None:
         now = datetime.now().replace(microsecond=0).isoformat(timespec="seconds")
