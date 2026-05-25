@@ -106,3 +106,90 @@ def test_ticket_se_recupera_despues_de_compra(ventas_service: VentasService) -> 
 
     assert ticket["status"] == "ok"
     assert compra["venta_id"] in ticket["ticket_texto"]
+
+
+# --- Casos adicionales para cliente_nombre (PE y vectores maliciosos)
+@pytest.mark.parametrize(
+    "nombre",
+    [
+        "Juan Perez",
+        "María-José O'Connor",
+        "Óscar Núñez",
+        "Anne Marie",
+        "李小龍",
+        "N'Golo Kanté",
+        "Alaa el-Din",
+        "José Luis",
+        "Renée",
+        "A" * 2,
+        "A" * 100,
+        "Zoë",
+        "Émilie",
+    ],
+)
+def test_cliente_nombre_valido_pe(ventas_service: VentasService, nombre: str) -> None:
+    payload = _base_payload(cliente_nombre=nombre)
+    result = ventas_service.comprar_entrada(payload)
+    assert result["status"] == "ok", f"Nombre valido rechazado: {nombre!r} -> {result}"
+
+
+@pytest.mark.parametrize(
+    "nombre",
+    [
+        "",
+        "   ",
+        "\t",
+        "\n",
+        None,
+        12345,
+        12.34,
+        True,
+        [],
+        {},
+        float("nan"),
+        float("inf"),
+        "A",
+        "A" * 10000,
+        "1234567890",
+        "DROP TABLE usuarios;",
+        "<script>alert(1)</script>",
+        "SELECT * FROM usuarios;",
+        "../../etc/passwd",
+        "\\x00",
+        "\u202e\u202e\u202e",
+        "\ud83d\ude00",
+        "\x1f\x8b\x08",
+        "    Nombre  Con  Doble   Espacio   ",
+        "   InicioEspacio",
+        "FinEspacio   ",
+        "' OR '1'='1' --",
+    ],
+)
+def test_cliente_nombre_invalidos_pe(ventas_service: VentasService, nombre: object) -> None:
+    payload = _base_payload(cliente_nombre=nombre)
+    result = ventas_service.comprar_entrada(payload)
+    assert result["status"] == "error", f"Nombre invalido aceptado: {nombre!r} -> {result}"
+    assert result["codigo_error"] == "ERR_VALIDACION"
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        "<img src=x onerror=alert(1)>",
+        "\"; DROP TABLE ventas; --",
+        "../../..\\..\\windows\\system32",
+        "\x00\x01\x02",
+    ],
+)
+def test_cliente_nombre_inyecciones_pe(ventas_service: VentasService, raw: str) -> None:
+    payload = _base_payload(cliente_nombre=raw)
+    result = ventas_service.comprar_entrada(payload)
+    assert result["status"] == "error"
+    assert result["codigo_error"] == "ERR_VALIDACION"
+
+
+def test_cliente_nombre_no_crashea_pe(ventas_service: VentasService) -> None:
+    huge = "Nombre" * 10000
+    payload = _base_payload(cliente_nombre=huge)
+    result = ventas_service.comprar_entrada(payload)
+    assert result["status"] in ("error", "ok")

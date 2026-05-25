@@ -95,3 +95,16 @@ def test_monto_en_soles_en_ticket(ventas_service: VentasService) -> None:
     assert result["status"] == "ok"
     assert "S/." in result["ticket_texto"]
     assert result["total"] == pytest.approx(85.0)
+
+
+# --- Pruebas AVL adicionales para cliente_nombre
+def test_cliente_nombre_too_short_and_too_long_avl(ventas_service: VentasService) -> None:
+    payload_short = _base_payload(cliente_nombre="A")
+    res_short = ventas_service.comprar_entrada(payload_short)
+    assert res_short["status"] == "error"
+    assert res_short["codigo_error"] == "ERR_VALIDACION"
+
+    payload_long = _base_payload(cliente_nombre="A" * 10000)
+    res_long = ventas_service.comprar_entrada(payload_long)
+    assert res_long["status"] == "error"
+    assert res_long["codigo_error"] == "ERR_VALIDACION"
