@@ -74,6 +74,9 @@ def validar_metodo_pago(value: Any) -> str:
 
 def validar_fecha_hora(value: Any) -> str:
     texto = validar_texto_no_vacio(value, "fecha_hora")
+    # Enforce strict ISO format with 'T' separator to avoid ambiguous formats
+    if "T" not in texto:
+        raise ValueError("fecha_hora debe seguir el formato ISO 8601 con separador 'T'")
     try:
         datetime.fromisoformat(texto)
     except ValueError as exc:

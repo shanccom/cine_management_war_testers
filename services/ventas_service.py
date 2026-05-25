@@ -104,14 +104,21 @@ class VentasService:
                     "mensaje": "El cliente no cumple la restriccion de edad de la pelicula.",
                 }
 
-            if data["capacidad_sala"] > 0:
-                disponibles = data["capacidad_sala"] - data["ocupadas_actuales"]
-                if data["cantidad_entradas"] > disponibles:
-                    return {
-                        "status": "error",
-                        "codigo_error": "ERR_INSUFICIENTE_ASIENTOS",
-                        "mensaje": "No hay suficientes asientos disponibles.",
-                    }
+            # Si la capacidad es nula o cero, no hay asientos disponibles
+            if data["capacidad_sala"] <= 0:
+                return {
+                    "status": "error",
+                    "codigo_error": "ERR_INSUFICIENTE_ASIENTOS",
+                    "mensaje": "No hay suficientes asientos disponibles.",
+                }
+
+            disponibles = data["capacidad_sala"] - data["ocupadas_actuales"]
+            if data["cantidad_entradas"] > disponibles:
+                return {
+                    "status": "error",
+                    "codigo_error": "ERR_INSUFICIENTE_ASIENTOS",
+                    "mensaje": "No hay suficientes asientos disponibles.",
+                }
 
             total_data = self.calcular_total(
                 precio_unitario=data["precio_unitario"],
