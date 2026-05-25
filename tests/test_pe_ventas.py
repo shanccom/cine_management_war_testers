@@ -17,7 +17,7 @@ def _base_payload(**overrides: object) -> dict[str, object]:
         "sala_numero": 1,
         "funcion_id": "F001",
         "fecha_hora": (datetime.now() + timedelta(hours=2)).replace(microsecond=0).isoformat(timespec="seconds"),
-        "cliente_nombre": "Juan Perez",
+        "cliente_nombre": "Juan",
         "cliente_documento": "12345678",
         "cliente_edad": 20,
         "cantidad_entradas": 2,
@@ -86,6 +86,57 @@ def test_clases_invalidas(
 
     assert result["status"] == "error"
     assert result["codigo_error"] == codigo_error
+
+
+@pytest.mark.parametrize(
+    "edad",
+    [
+        0,
+        1,
+        17,
+        18,
+        25,
+        99,
+        120,
+    ],
+)
+def test_cliente_edad_valida_pe(ventas_service: VentasService, edad: int) -> None:
+    payload = _base_payload(cliente_edad=edad)
+    result = ventas_service.comprar_entrada(payload)
+    assert result["status"] == "ok", f"Edad valida rechazada: {edad!r} -> {result}"
+
+
+@pytest.mark.parametrize(
+    "edad",
+    [
+        -1,
+        -5,
+        "-1",
+        "+1",
+        " 20 ",
+        "abc",
+        "18a",
+        "18.5",
+        "",
+        None,
+        True,
+        [],
+        {},
+        float("nan"),
+        float("inf"),
+        18.5,
+        121,
+        9999,
+        "1e2",
+        "--10",
+        "🙂",
+    ],
+)
+def test_cliente_edad_invalida_pe(ventas_service: VentasService, edad: object) -> None:
+    payload = _base_payload(cliente_edad=edad)
+    result = ventas_service.comprar_entrada(payload)
+    assert result["status"] == "error", f"Edad invalida aceptada: {edad!r} -> {result}"
+    assert result["codigo_error"] == "ERR_VALIDACION"
 
 
 def test_metodo_pago_solo_efectivo(ventas_service: VentasService) -> None:
