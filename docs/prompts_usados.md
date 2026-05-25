@@ -90,6 +90,17 @@ TODO: indicar resultados obtenidos del prompt.
 
 ---
 
+### Entrada creada: Venta de Entradas - Funcion heredada por sala
+
+- Fecha: 2026-05-24
+- Autor: Persona 3 (asistente automatizado)
+- Contexto: Solicitud para quitar el campo manual de funcion ID y dejarlo vinculado a la sala seleccionada.
+- Prompt: "quitale la función ID porque cada sala debería estar vinculada a una función ID"
+- Resultado esperado: UI de ventas sin campo visible de funcion ID y con asignacion automatica segun la sala.
+- Resultado obtenido: UI actualizada para ocultar el campo manual de funcion ID y completar el valor automaticamente desde la sala.
+
+---
+
 ### Entrada creada: Venta de Entradas - Preparacion pytest ventas
 
 - Fecha: 2026-05-24

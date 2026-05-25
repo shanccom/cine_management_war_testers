@@ -91,6 +91,7 @@ class VentasUI:
             lookup[etiqueta] = {
                 "sala_id": self._value_as_text(item, ("sala_id", "id"), etiqueta),
                 "sala_numero": numero,
+                "funcion_id": self._value_as_text(item, ("funcion_id", "function_id"), f"F-{numero}"),
                 "capacidad_sala": self._value_as_text(item, ("capacidad", "capacity"), "0"),
                 "ocupadas_actuales": self._value_as_text(item, ("ocupadas", "ocupacion", "occupied"), "0"),
             }
@@ -161,7 +162,6 @@ class VentasUI:
         visible_labels = [
             ("pelicula_combo", "Pelicula"),
             ("sala_combo", "Sala"),
-            ("funcion_id", "Funcion ID"),
             ("fecha", "Fecha"),
             ("hora", "Hora"),
             ("cliente_nombre", "Cliente nombre"),
@@ -286,6 +286,7 @@ class VentasUI:
             return
         self.fields["sala_id"].set(room.get("sala_id", ""))
         self.fields["sala_numero"].set(room.get("sala_numero", "0"))
+        self.fields["funcion_id"].set(room.get("funcion_id", f"F-{room.get('sala_numero', '0')}"))
         self.fields["capacidad_sala"].set(room.get("capacidad_sala", "0"))
         self.fields["ocupadas_actuales"].set(room.get("ocupadas_actuales", "0"))
 

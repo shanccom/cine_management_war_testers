@@ -80,6 +80,33 @@
       "ticket_texto": "TICKET DE VENTA\nVenta ID: V-531E438DC8D842FF8DB2075530EF8712\nPelicula: Oppenheimer (P001)\nSala: S1\nFuncion: 3\nFecha y hora: 2026-05-24T21:29:26\nCliente: raul - 111\nCantidad: 10\nMetodo de pago: efectivo\nTotal: 320.00\nEstado: registrada",
       "timestamp": "2026-05-24T21:30:02",
       "_schema_version": 1
+    },
+    {
+      "venta_id": "V-279081A654E744E18373C9EF985621F8",
+      "pelicula_id": "P001",
+      "pelicula_titulo": "Oppenheimer",
+      "sala_id": "S1",
+      "sala_numero": 1,
+      "funcion_id": "3",
+      "fecha_hora": "2026-05-24T21:33:06",
+      "cliente": {
+        "nombre": "23",
+        "documento": "423",
+        "edad": 1050
+      },
+      "cantidad": 1,
+      "precio_unitario": 32.0,
+      "subtotal": 32.0,
+      "descuentos": 0.0,
+      "recargos": 0.0,
+      "impuestos": 0.0,
+      "total": 32.0,
+      "metodo_pago": "efectivo",
+      "restriccion_edad": 15,
+      "estado": "registrada",
+      "ticket_texto": "TICKET DE VENTA\nVenta ID: V-279081A654E744E18373C9EF985621F8\nPelicula: Oppenheimer (P001)\nSala: S1\nFuncion: 3\nFecha y hora: 2026-05-24T21:33:06\nCliente: 23 - 423\nCantidad: 1\nMetodo de pago: efectivo\nTotal: 32.00\nEstado: registrada",
+      "timestamp": "2026-05-24T21:33:07",
+      "_schema_version": 1
     }
   ],
   "_todo": "Agregar ventas de ejemplo",
