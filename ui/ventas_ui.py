@@ -186,7 +186,7 @@ class VentasUI:
                 self.room_combo.grid(row=row, column=col + 1, sticky="ew", padx=(0, 14), pady=4)
                 self.room_combo.bind("<<ComboboxSelected>>", self._on_room_selected)
             elif key == "metodo_pago":
-                combo = ttk.Combobox(form, textvariable=self.fields[key], values=("efectivo", "tarjeta", "transferencia"), state="readonly", width=36)
+                combo = ttk.Combobox(form, textvariable=self.fields[key], values=("efectivo",), state="readonly", width=36)
                 combo.grid(row=row, column=col + 1, sticky="ew", padx=(0, 14), pady=4)
             elif key in {"fecha", "hora"}:
                 entry = tk.Entry(form, textvariable=self.fields[key], width=18, state="readonly")

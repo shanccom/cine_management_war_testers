@@ -15,7 +15,7 @@ VENTAS_DATA_FILE = DATA_DIR / "ventas.json"
 MIN_POR_COMPRA = 1
 MAX_POR_COMPRA = 10
 
-METODOS_PAGO_PERMITIDOS = ("efectivo", "tarjeta", "transferencia")
+METODOS_PAGO_PERMITIDOS = ("efectivo",)
 
 SCHEMA_VERSION_VENTAS = 1
 
