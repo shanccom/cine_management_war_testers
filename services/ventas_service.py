@@ -77,10 +77,6 @@ class VentasService:
         if "promo_grupal" in promociones and cantidad_normalizada >= 4:
             descuentos = round(descuentos + subtotal * 0.05, 2)
 
-        if cliente_edad is not None and cliente_edad < 5:
-            subtotal = 0.0
-            descuentos = 0.0
-
         recargos = 0.0
         impuestos = 0.0
         total = round(max(subtotal - descuentos + recargos + impuestos, 0.0), 2)
