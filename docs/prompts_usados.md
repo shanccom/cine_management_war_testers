@@ -77,3 +77,14 @@ TODO: indicar resultados obtenidos del prompt.
 - Resultado esperado: Interfaz de ventas actualizada para usar seleccion desplegable de peliculas con datos reales o realistamente simulados, ocultando el id al usuario.
 - Resultado obtenido: UI actualizada con combobox de peliculas y salas, ids ocultos y formulario minimalista.
 
+---
+
+### Entrada creada: Venta de Entradas - Preparacion pytest ventas
+
+- Fecha: 2026-05-24
+- Autor: Persona 3 (asistente automatizado)
+- Contexto: Solicitud para completar los requisitos del integrante 3 y preparar las pruebas de ventas con pytest sobre la estructura ya existente, sin crear carpetas nuevas.
+- Prompt: "ahora cumple con todos mis requisitos, actualiza"
+- Resultado esperado: Pruebas PE y AVL reales para ventas, alineadas con comprar entrada, mostrar ticket y calcular total; documentacion actualizada.
+- Resultado obtenido: `tests/test_pe_ventas.py` y `tests/test_avl_ventas.py` convertidos a pytest, con casos PE/AVL y ticket; historial de prompts actualizado.
+
