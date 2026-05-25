@@ -100,36 +100,44 @@ class SalasUI:
             self.window.focus()
 
     def actualizar_tabla(self) -> None:
-        """Limpia la tabla y vuelve a cargar los datos desde el archivo JSON."""
-        # Limpiar registros existentes en la UI
-        for row in self.tabla.get_children():
-            self.tabla.delete(row)
+            """Limpia la tabla y vuelve a cargar los datos desde el archivo JSON con tolerancia a fallos."""
+            # Limpiar registros existentes en la UI
+            for row in self.tabla.get_children():
+                self.tabla.delete(row)
 
-        try:
-            if os.path.exists(self.json_path):
-                with open(self.json_path, "r", encoding="utf-8") as file:
-                    data = json.load(file)
-            else:
-                data = {"items": []}
+            try:
+                if os.path.exists(self.json_path):
+                    with open(self.json_path, "r", encoding="utf-8") as file:
+                        data = json.load(file)
+                else:
+                    data = {"items": []}
 
-            for item in data.get("items", []):
-                # Reconstruimos usando el core para asegurar la integridad
-                sala = Sala.from_dict(item)
-                asientos_libres = sala.capacidad - len(sala.asientos_ocupados)
-                
-                self.tabla.insert(
-                    "",
-                    tk.END,
-                    values=(
-                        sala.sala_id,
-                        sala.numero,
-                        sala.capacidad,
-                        asientos_libres,
-                        len(sala.asientos_ocupados)
-                    )
-                )
-        except (OSError, json.JSONDecodeError) as e:
-            messagebox.showerror("Error de Sistema", f"No se pudo leer la tabla: {e}")
+                for item in data.get("items", []):
+                    try:
+                        # Si el JSON fue alterado externamente con datos absurdos,
+                        # el constructor del Core lanzara TypeError o ValueError aqui.
+                        sala = Sala.from_dict(item)
+                        asientos_libres = sala.capacidad - len(sala.asientos_ocupados)
+                        
+                        self.tabla.insert(
+                            "",
+                            tk.END,
+                            values=(
+                                sala.sala_id,
+                                sala.numero,
+                                sala.capacidad,
+                                asientos_libres,
+                                len(sala.asientos_ocupados)
+                            )
+                        )
+                    except (ValueError, TypeError) as e:
+                        # Capturamos el intento de corrupcion: la app no se cae.
+                        # Imprime una alerta en consola para el desarrollador y continua con la siguiente sala.
+                        print(f"[ALERTA DEFENSIVA] Registro de sala corrupto omitido en JSON: {e}")
+                        continue
+
+            except (OSError, json.JSONDecodeError) as e:
+                messagebox.showerror("Error de Sistema", f"No se pudo leer la estructura del archivo de datos: {e}")
 
     def guardar_sala(self) -> None:
         """Lee datos de formulario, valida y guarda en JSON."""
