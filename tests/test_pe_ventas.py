@@ -227,3 +227,49 @@ def test_cliente_documento_pe(
         assert expected_fragment is not None
         assert expected_fragment in result["mensaje"].lower()
 
+
+# --- Casos PE: Carnet de Extranjeria (CE)
+@pytest.mark.parametrize(
+    "documento",
+    [
+        "923101234",      # CE base: 9 digitos, tipo=1
+        "923301234",      # CE base: tipo=3
+        "923001234",      # CE base: tipo=0
+        "923101234RG",    # categoria migratoria
+        "923101234TI",
+        "923101234RE",
+        "923101234E1",
+    ],
+)
+def test_carnet_extranjeria_formatos_validos_pe(ventas_service: VentasService, documento: str) -> None:
+    payload = _base_payload(cliente_documento=documento)
+    result = ventas_service.comprar_entrada(payload)
+    assert result["status"] == "ok"
+
+
+@pytest.mark.parametrize(
+    "documento, expected_fragment",
+    [
+        ("923201234", "tipo"),       # 4to digito invalido (solo 0,1,3)
+        ("923401234", "tipo"),
+        ("92310123", "9"),          # longitud corta
+        ("9231012345", "9"),        # longitud larga sin sufijo
+        ("92310A234", "numer"),     # no numerico en base
+        ("923101234rg", "categoria"),
+        ("923101234XX", "categoria"),
+        ("923101234R", "categoria"),
+        ("923101234RGX", "categoria"),
+        (" 923101234RG ", "espacios"),
+    ],
+)
+def test_carnet_extranjeria_formatos_invalidos_pe(
+    ventas_service: VentasService,
+    documento: str,
+    expected_fragment: str,
+) -> None:
+    payload = _base_payload(cliente_documento=documento)
+    result = ventas_service.comprar_entrada(payload)
+    assert result["status"] == "error"
+    assert result["codigo_error"] == "ERR_VALIDACION"
+    assert expected_fragment in result["mensaje"].lower()
+
