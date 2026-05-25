@@ -1,1 +1,1 @@
-# TODO: agregar dependencias si se incorporan librerias externas
+pytest>=8.0.0
