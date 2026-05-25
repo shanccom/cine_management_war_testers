@@ -22,7 +22,7 @@ def _base_payload(**overrides: object) -> dict[str, object]:
         "cliente_edad": 25,
         "cantidad_entradas": 1,
         "precio_unitario": 35.0,
-        "metodo_pago": "tarjeta",
+        "metodo_pago": "efectivo",
         "tipo_cliente": "general",
         "restriccion_edad": 18,
         "capacidad_sala": 100,

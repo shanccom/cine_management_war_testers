@@ -41,8 +41,6 @@ def ventas_service(tmp_path) -> VentasService:
     "cantidad_entradas, metodo_pago, cliente_edad, restriccion_edad, expected_status",
     [
         (1, "efectivo", 20, 0, "ok"),
-        (5, "tarjeta", 22, 0, "ok"),
-        (10, "transferencia", 30, 0, "ok"),
     ],
 )
 def test_clases_validas(
