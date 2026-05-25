@@ -6,6 +6,8 @@ from datetime import datetime, timedelta
 
 import pytest
 
+import services.ventas_service as ventas_service_module
+from core.helpers import load_json_file, save_json_file
 from services.ventas_service import VentasService
 
 
@@ -34,7 +36,24 @@ def _base_payload(**overrides: object) -> dict[str, object]:
 
 
 @pytest.fixture()
-def ventas_service(tmp_path) -> VentasService:
+def ventas_service(tmp_path, monkeypatch) -> VentasService:
+    save_json_file(
+        str(tmp_path / "salas.json"),
+        {
+            "items": [
+                {
+                    "sala_id": "S1",
+                    "id": "S1",
+                    "numero": "1",
+                    "capacidad": "100",
+                    "ocupadas_actuales": "0",
+                    "asientos_ocupados": "",
+                    "asientos_ocupados_por_pelicula": {},
+                }
+            ],
+        },
+    )
+    monkeypatch.setattr(ventas_service_module, "SALAS_DATA_FILE", tmp_path / "salas.json")
     return VentasService(tmp_path / "ventas.json")
 
 
@@ -93,12 +112,14 @@ def test_clases_invalidas(
     "edad",
     [
         5,
+        "5",
         6,
         17,
         18,
         25,
         99,
         110,
+        "110",
     ],
 )
 def test_cliente_edad_valida_pe(ventas_service: VentasService, edad: int) -> None:
@@ -115,6 +136,11 @@ def test_cliente_edad_valida_pe(ventas_service: VentasService, edad: int) -> Non
         2,
         3,
         4,
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
     ],
 )
 def test_cliente_menor_de_cinco_pe(ventas_service: VentasService, edad: int) -> None:
@@ -123,6 +149,13 @@ def test_cliente_menor_de_cinco_pe(ventas_service: VentasService, edad: int) -> 
     assert result["status"] == "error"
     assert result["codigo_error"] == "ERR_VALIDACION"
     assert "mayor o igual que 5" in result["mensaje"].lower()
+
+
+def test_cliente_edad_vacia_pe(ventas_service: VentasService) -> None:
+    result = ventas_service.comprar_entrada(_base_payload(cliente_edad=""))
+    assert result["status"] == "error"
+    assert result["codigo_error"] == "ERR_VALIDACION"
+    assert "vac" in result["mensaje"].lower()
 
 
 @pytest.mark.parametrize(
@@ -136,15 +169,19 @@ def test_cliente_menor_de_cinco_pe(ventas_service: VentasService, edad: int) -> 
         "abc",
         "18a",
         "18.5",
+        "5.0",
         "",
         None,
         True,
+        False,
         [],
         {},
         float("nan"),
         float("inf"),
         18.5,
+        5.0,
         111,
+        "111",
         9999,
         "1e2",
         "--10",
@@ -176,6 +213,46 @@ def test_ticket_se_recupera_despues_de_compra(ventas_service: VentasService) -> 
 
     assert ticket["status"] == "ok"
     assert compra["venta_id"] in ticket["ticket_texto"]
+
+
+def test_asiento_comprado_queda_ocupado_pe(ventas_service: VentasService, tmp_path) -> None:
+    payload = _base_payload(asientos_seleccionados=["A1"], cantidad_entradas=1, asientos_ocupados=[])
+
+    primera_compra = ventas_service.comprar_entrada(payload)
+
+    assert primera_compra["status"] == "ok"
+
+    salas_data = load_json_file(str(tmp_path / "salas.json"))
+    sala = next(item for item in salas_data["items"] if item["sala_id"] == "S1")
+    assert "A1" in sala["asientos_ocupados"]
+
+    segunda_compra = ventas_service.comprar_entrada(
+        _base_payload(asientos_seleccionados=["A1"], cantidad_entradas=1, asientos_ocupados=["A1"])
+    )
+
+    assert segunda_compra["status"] == "error"
+    assert segunda_compra["codigo_error"] == "ERR_VALIDACION"
+    assert "ocupado" in segunda_compra["mensaje"].lower()
+
+
+def test_asiento_varia_por_pelicula_pe(ventas_service: VentasService, tmp_path) -> None:
+    compra_pelicula_1 = ventas_service.comprar_entrada(
+        _base_payload(pelicula_id="P002", pelicula_titulo="Intensamente 2", asientos_seleccionados=["A3"], cantidad_entradas=1)
+    )
+    assert compra_pelicula_1["status"] == "ok"
+
+    compra_pelicula_2 = ventas_service.comprar_entrada(
+        _base_payload(pelicula_id="P004", pelicula_titulo="Garfield: Fuera de Casa", asientos_seleccionados=["A3"], cantidad_entradas=1)
+    )
+    assert compra_pelicula_2["status"] == "ok"
+
+    salas_data = load_json_file(str(tmp_path / "salas.json"))
+    sala = next(item for item in salas_data["items"] if item["sala_id"] == "S1")
+    ocupacion = sala["asientos_ocupados_por_pelicula"]
+    assert "P002" in ocupacion
+    assert "P004" in ocupacion
+    assert "A3" in ocupacion["P002"]
+    assert "A3" in ocupacion["P004"]
 
 
 # --- Casos adicionales para cliente_nombre (PE y vectores maliciosos)

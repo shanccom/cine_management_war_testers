@@ -1,4 +1,29 @@
 {
-  "items": [],
-  "_todo": "Agregar salas de ejemplo"
+  "items": [
+    {
+      "sala_id": "S1",
+      "id": "S1",
+      "numero": "1",
+      "capacidad": "120",
+      "asientos_ocupados": "F7,J8,H6,H7",
+      "ocupadas_actuales": "2",
+      "ocupadas": "2",
+      "ocupacion": "2",
+      "occupied": "2",
+      "asientos_ocupados_por_pelicula": {
+        "P001": [
+          "F7",
+          "J8"
+        ],
+        "P002": [
+          "H6",
+          "H7"
+        ],
+        "P004": [
+          "H6",
+          "H7"
+        ]
+      }
+    }
+  ]
 }

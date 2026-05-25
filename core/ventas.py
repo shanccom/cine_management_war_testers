@@ -94,6 +94,37 @@ class Venta:
     @staticmethod
     def from_dict(data: dict[str, Any]) -> "Venta":
         cliente = data.get("cliente", {}) if isinstance(data, dict) else {}
+        known_keys = {
+            "venta_id",
+            "pelicula_id",
+            "pelicula_titulo",
+            "titulo",
+            "sala_id",
+            "sala_numero",
+            "numero_sala",
+            "funcion_id",
+            "fecha_hora",
+            "cliente",
+            "cliente_nombre",
+            "cliente_documento",
+            "cliente_edad",
+            "cantidad",
+            "precio_unitario",
+            "subtotal",
+            "descuentos",
+            "recargos",
+            "impuestos",
+            "total",
+            "metodo_pago",
+            "restriccion_edad",
+            "estado",
+            "ticket_texto",
+            "timestamp",
+            "_schema_version",
+            "schema_version",
+        }
+        extra_fields = {k: v for k, v in data.items() if k not in known_keys}
+
         return Venta(
             venta_id=data.get("venta_id", ""),
             pelicula_id=data.get("pelicula_id", ""),
@@ -118,4 +149,5 @@ class Venta:
             ticket_texto=data.get("ticket_texto", ""),
             timestamp=data.get("timestamp", ""),
             schema_version=data.get("_schema_version", 1),
+            **extra_fields,
         )

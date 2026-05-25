@@ -9,8 +9,8 @@ from pathlib import Path
 from typing import Any, Callable
 from uuid import uuid4
 
-from config.constants import DESCUENTOS_TIPO_CLIENTE, MAX_POR_COMPRA, MIN_POR_COMPRA, VENTAS_DATA_FILE
-from core.helpers import log_error
+from config.constants import DESCUENTOS_TIPO_CLIENTE, MAX_POR_COMPRA, MIN_POR_COMPRA, VENTAS_DATA_FILE, SALAS_DATA_FILE
+from core.helpers import log_error, load_json_file, save_json_file
 from core.ventas import Venta
 from storage.json_store import VentasStore
 from validators.ventas_validators import validar_decimal, validar_entero, validar_payload_venta, validar_texto_no_vacio
@@ -41,20 +41,120 @@ def _formatear_ticket(venta: Venta) -> str:
         f"Fecha y hora: {venta.fecha_hora}",
         f"Cliente: {venta.cliente_nombre} - {venta.cliente_documento}",
         f"Cantidad: {venta.cantidad}",
+    ]
+    # include selected seats if present
+    seats = []
+    try:
+        seats = list(venta.extra.get("asientos_seleccionados", [])) if getattr(venta, "extra", None) is not None else []
+    except Exception:
+        seats = []
+    if seats:
+        lines.append(f"Asientos: {', '.join(seats)}")
+    lines.extend([
         f"Metodo de pago: {venta.metodo_pago}",
         f"Total: S/. {venta.total:.2f}",
         f"Estado: {venta.estado}",
-    ]
+    ])
     return "\n".join(lines)
 
 
-class VentasService:
-    def __init__(self, ventas_path: str | Path = VENTAS_DATA_FILE) -> None:
-        self.store = VentasStore(ventas_path)
+def _normalizar_lista_asientos(raw: Any) -> list[str]:
+    if isinstance(raw, str):
+        items = [item.strip().upper() for item in raw.split(",") if item.strip()]
+    elif isinstance(raw, (list, tuple, set)):
+        items = [str(item).strip().upper() for item in raw if str(item).strip()]
+    else:
+        items = []
+    return list(dict.fromkeys(items))
 
-    def calcular_total(
-        self,
-        precio_unitario: float,
+
+def _normalizar_mapa_asientos(raw: Any) -> dict[str, list[str]]:
+    if not isinstance(raw, dict):
+        return {}
+    normalizado: dict[str, list[str]] = {}
+    for key, value in raw.items():
+        key_text = str(key).strip()
+        if not key_text:
+            continue
+        normalizado[key_text] = _normalizar_lista_asientos(value)
+    return normalizado
+
+
+def _actualizar_sala_ocupada(
+    sala_id: str,
+    asientos: list[str],
+    sala_numero: int,
+    capacidad: int,
+) -> None:
+    if not asientos:
+        return
+
+    try:
+        sala_payload = load_json_file(str(SALAS_DATA_FILE))
+    except Exception:
+    pelicula_id: str,
+        sala_payload = {}
+
+    items = sala_payload.get("items", []) if isinstance(sala_payload, dict) else []
+    if not isinstance(items, list):
+        items = []
+
+    target_item: dict[str, Any] | None = None
+    for item in items:
+        if isinstance(item, dict) and (item.get("sala_id") == sala_id or item.get("id") == sala_id):
+            target_item = item
+            break
+
+    if target_item is None:
+        target_item = {
+            "sala_id": sala_id,
+            "id": sala_id,
+            "numero": str(sala_numero),
+            "capacidad": str(capacidad),
+        }
+        items.append(target_item)
+
+    existing_map = _normalizar_mapa_asientos(target_item.get("asientos_ocupados_por_pelicula", {}))
+    pelicula_key = str(pelicula_id).strip() or "desconocida"
+    occupied_for_movie = list(dict.fromkeys(existing_map.get(pelicula_key, []) + _normalizar_lista_asientos(asientos)))
+    existing_map[pelicula_key] = occupied_for_movie
+    target_item["asientos_ocupados_por_pelicula"] = existing_map
+
+    combined = list(dict.fromkeys(seat for seats in existing_map.values() for seat in seats))
+    target_item["asientos_ocupados"] = ",".join(combined)
+    target_item["ocupadas_actuales"] = str(len(occupied_for_movie))
+    target_item["ocupadas"] = str(len(occupied_for_movie))
+    # support per-pelicula mapping
+    pelicula_map = {}
+    raw_map = target_item.get("asientos_ocupados_por_pelicula")
+    if isinstance(raw_map, dict):
+        pelicula_map = {k: str(v) for k, v in raw_map.items()}
+    else:
+        # fall back to legacy single-string field
+        legacy = target_item.get("asientos_ocupados", "")
+        if isinstance(legacy, str) and legacy.strip():
+            pelicula_map = {"_legacy": legacy}
+
+    # Merge and normalize for this pelicula
+    pelicula_id = str(sala_id)  # placeholder if not provided differently
+    # If caller passed pelicula_id via special key in asientos list tuple, skip (caller will pass proper arg)
+    # We'll expect caller to call helper with pelicula_id by replacing signature below if needed.
+    # For backward compatibility, use pelicula_map as-is and append to _legacy
+    existing_for_legacy = _normalizar_lista_asientos(pelicula_map.get("_legacy", ""))
+    combined_legacy = list(dict.fromkeys(existing_for_legacy + _normalizar_lista_asientos(asientos)))
+    if combined_legacy:
+        target_item["asientos_ocupados"] = ",".join(combined_legacy)
+    # update general counts as total occupied across peliculas
+    total_occupied = 0
+    for v in pelicula_map.values():
+        total_occupied += len(_normalizar_lista_asientos(v))
+    total_occupied += len(combined_legacy)
+    target_item["ocupadas_actuales"] = str(total_occupied)
+    target_item["ocupadas"] = str(total_occupied)
+    target_item["ocupacion"] = str(total_occupied)
+    target_item["occupied"] = str(total_occupied)
+    target_item["numero"] = str(sala_numero)
+    target_item["capacidad"] = str(capacidad)
         cantidad_entradas: int,
         tipo_cliente: str = "general",
         promociones: list[str] | None = None,
@@ -169,12 +269,26 @@ class VentasService:
                 estado="registrada",
                 ticket_texto="",
                 timestamp=datetime.now().isoformat(timespec="seconds"),
+                asientos_seleccionados=data.get("asientos_seleccionados", []),
             )
             venta.ticket_texto = _formatear_ticket(venta)
 
             payload_store = self.store.load()
             payload_store["items"].append(venta.to_dict())
             self.store.save(payload_store)
+
+            # Mark seats as occupied in the salas catalog so they cannot be selected again
+            try:
+                _actualizar_sala_ocupada(
+                    sala_id=venta.sala_id,
+                    pelicula_id=venta.pelicula_id,
+                    asientos=data.get("asientos_seleccionados", []),
+                    sala_numero=venta.sala_numero,
+                    capacidad=data["capacidad_sala"],
+                )
+            except Exception:
+                # non-fatal: log and continue
+                log_error("No fue posible actualizar asientos ocupados en el catalogo de salas")
 
             return {
                 "status": "ok",

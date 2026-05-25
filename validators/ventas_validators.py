@@ -9,6 +9,7 @@ from numbers import Real
 from typing import Any
 
 from config.constants import MAX_POR_COMPRA, METODOS_PAGO_PERMITIDOS, MIN_POR_COMPRA
+import re
 
 
 def _raise_type_error(field_name: str, expected: str) -> None:
@@ -88,6 +89,17 @@ def validar_payload_venta(payload: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(payload, dict):
         raise TypeError("payload debe ser un diccionario")
 
+    # handle seats selection if present
+    def _validate_seats_field() -> list[str] | None:
+        raw = payload.get("asientos_seleccionados")
+        if raw is None:
+            return None
+        ocupadas_raw = payload.get("asientos_ocupados", [])
+        ocupadas = set([s.strip().upper() for s in ocupadas_raw]) if isinstance(ocupadas_raw, (list, tuple, set)) else set()
+        return validar_lista_asientos(raw, "asientos_seleccionados", maximo=MAX_POR_COMPRA, ocupadas=ocupadas)
+
+    selected_seats = _validate_seats_field()
+
     validated = {
         "pelicula_id": validar_texto_no_vacio(payload.get("pelicula_id"), "pelicula_id"),
         "pelicula_titulo": validar_texto_no_vacio(payload.get("pelicula_titulo", payload.get("titulo", "")), "pelicula_titulo"),
@@ -108,8 +120,51 @@ def validar_payload_venta(payload: dict[str, Any]) -> dict[str, Any]:
         "ocupadas_actuales": validar_entero(payload.get("ocupadas_actuales", 0), "ocupadas_actuales", minimo=0),
     }
 
+    # If seats were provided, override cantidad_entradas and include seats
+    if selected_seats is not None:
+        validated["asientos_seleccionados"] = selected_seats
+        validated["cantidad_entradas"] = len(selected_seats)
+
     validated["tipo_cliente"] = validated["tipo_cliente"].lower()
     return validated
+
+
+def validar_lista_asientos(value: Any, field_name: str, *, maximo: int = MAX_POR_COMPRA, ocupadas: set[str] | None = None) -> list[str]:
+    if ocupadas is None:
+        ocupadas = set()
+    if value is None:
+        raise ValueError(f"{field_name} no puede ser nulo")
+    seats: list[str]
+    if isinstance(value, str):
+        raw = value.strip()
+        if not raw:
+            raise ValueError(f"{field_name} no puede estar vacio")
+        seats = [s.strip().upper() for s in raw.split(",") if s.strip()]
+    elif isinstance(value, (list, tuple)):
+        seats = [str(s).strip().upper() for s in value if str(s).strip()]
+    else:
+        raise TypeError(f"{field_name} debe ser una lista o cadena separada por comas")
+
+    if not seats:
+        raise ValueError(f"{field_name} no puede estar vacio")
+
+    if len(seats) > maximo:
+        raise ValueError(f"{field_name} supera el maximo de {maximo} asientos")
+
+    pattern = re.compile(r"^[A-Z]\d{1,2}$")
+    normalized: list[str] = []
+    seen: set[str] = set()
+    for s in seats:
+        if not pattern.match(s):
+            raise ValueError(f"asiento invalido: {s}")
+        if s in seen:
+            raise ValueError(f"asiento repetido: {s}")
+        if s in ocupadas:
+            raise ValueError(f"asiento ocupado: {s}")
+        seen.add(s)
+        normalized.append(s)
+
+    return normalized
 
 
 def validar_tipo_documento(value: Any) -> str:

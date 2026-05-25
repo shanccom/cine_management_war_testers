@@ -28,6 +28,9 @@ class VentasUI:
         self.movie_lookup: dict[str, dict[str, str]] = {}
         self.room_lookup: dict[str, dict[str, str]] = {}
         self.summary_var = tk.StringVar(master=self.parent, value="Selecciona una pelicula para cargar precio y restriccion.")
+        self._selected_seats: list[str] = []
+        self._seat_buttons: dict[str, tk.Button] = {}
+        self.seats_var = tk.StringVar(master=self.parent, value="Selecciona asientos en la cuadricula.")
 
     @staticmethod
     def _format_currency(amount: float) -> str:
@@ -93,12 +96,19 @@ class VentasUI:
         for item in catalog:
             numero = self._value_as_text(item, ("numero", "sala_numero", "room_number"), "1")
             etiqueta = f"Sala {numero}"
+            asientos_ocupados = self._value_as_text(item, ("asientos_ocupados", "occupied_seats"), "")
+            asientos_por_pelicula = item.get("asientos_ocupados_por_pelicula", {}) if isinstance(item, dict) else {}
+            if not isinstance(asientos_por_pelicula, dict):
+                asientos_por_pelicula = {}
+            ocupadas_actuales = self._value_as_text(item, ("ocupadas_actuales", "ocupadas", "ocupacion", "occupied"), "0")
             lookup[etiqueta] = {
                 "sala_id": self._value_as_text(item, ("sala_id", "id"), etiqueta),
                 "sala_numero": numero,
                 "funcion_id": self._value_as_text(item, ("funcion_id", "function_id"), f"F-{numero}"),
                 "capacidad_sala": self._value_as_text(item, ("capacidad", "capacity"), "0"),
-                "ocupadas_actuales": self._value_as_text(item, ("ocupadas", "ocupacion", "occupied"), "0"),
+                "ocupadas_actuales": ocupadas_actuales,
+                "asientos_ocupados": asientos_ocupados,
+                "asientos_ocupados_por_pelicula": {str(key): value for key, value in asientos_por_pelicula.items()},
             }
         return lookup
 
@@ -115,7 +125,13 @@ class VentasUI:
         normalized_items: list[dict[str, str]] = []
         for item in items:
             if isinstance(item, dict):
-                normalized_items.append({key: str(value) for key, value in item.items()})
+                normalized_item: dict[str, str] = {}
+                for key, value in item.items():
+                    if isinstance(value, (dict, list, tuple, set)):
+                        normalized_item[key] = value  # type: ignore[assignment]
+                    else:
+                        normalized_item[key] = str(value)
+                normalized_items.append(normalized_item)
         return normalized_items
 
     def _value_as_text(self, item: dict[str, str], keys: tuple[str, ...], fallback: str) -> str:
@@ -174,7 +190,7 @@ class VentasUI:
             ("cliente_nombre", "Cliente nombre"),
             ("cliente_documento", "Cliente documento (DNI/Carnet)"),
             ("cliente_edad", "Cliente edad"),
-            ("cantidad_entradas", "Cantidad entradas"),
+            ("asientos", "Asientos"),
             ("metodo_pago", "Metodo pago"),
         ]
 
@@ -211,6 +227,11 @@ class VentasUI:
             elif key in {"fecha", "hora"}:
                 entry = tk.Entry(form, textvariable=self.fields[key], width=18, state="readonly")
                 entry.grid(row=row, column=col + 1, sticky="w", padx=(0, 14), pady=4)
+            elif key == "asientos":
+                sub = tk.Frame(form, bg="#f2f2f2")
+                sub.grid(row=row, column=col + 1, sticky="w", padx=(0, 14), pady=4)
+                tk.Button(sub, text="Seleccionar asientos", command=self._open_seat_selector, bg="#d9d9d9", relief="flat", padx=10, pady=4).pack(side="left")
+                tk.Label(sub, textvariable=self.seats_var, bg="#f2f2f2", fg="#444444", padx=8).pack(side="left")
             else:
                 entry = tk.Entry(form, textvariable=self.fields[key], width=40)
                 entry.grid(row=row, column=col + 1, sticky="ew", padx=(0, 14), pady=4)
@@ -253,8 +274,8 @@ class VentasUI:
         defaults = {
             "metodo_pago": "efectivo",
             "tipo_cliente": "general",
-            "cantidad_entradas": "1",
-            "cliente_edad": "18",
+            "cantidad_entradas": "0",
+            "cliente_edad": "",
             "venta_id_buscar": "",
         }
         for key, value in defaults.items():
@@ -274,6 +295,7 @@ class VentasUI:
             self._on_room_selected()
         # ensure document entries reflect the tipo
         self._on_document_type_changed()
+        self._set_selected_seats([])
 
     def _sync_datetime_fields(self) -> None:
         current = datetime.now().replace(microsecond=0)
@@ -292,7 +314,12 @@ class VentasUI:
 
     def _current_room(self) -> dict[str, str]:
         selected = self.room_combo.get() if self.room_combo else ""
+        self.room_lookup = self._load_room_catalog()
         return self.room_lookup.get(selected, {})
+
+    def _current_movie_id(self) -> str:
+        movie = self._current_movie()
+        return movie.get("pelicula_id", "")
 
     def _on_movie_selected(self, _event: object | None = None) -> None:
         movie = self._current_movie()
@@ -315,6 +342,128 @@ class VentasUI:
         self.fields["funcion_id"].set(room.get("funcion_id", f"F-{room.get('sala_numero', '0')}"))
         self.fields["capacidad_sala"].set(room.get("capacidad_sala", "0"))
         self.fields["ocupadas_actuales"].set(room.get("ocupadas_actuales", "0"))
+        self._set_selected_seats([])
+
+    def _seat_codes(self, capacity: int) -> list[str]:
+        seats: list[str] = []
+        for index in range(max(capacity, 0)):
+            row = index // 10
+            seat = index % 10 + 1
+            seats.append(f"{chr(ord('A') + row)}{seat}")
+        return seats
+
+    def _occupied_seats_for_room(self) -> set[str]:
+        room = self._current_room()
+        if not room:
+            return set()
+        occupied: set[str] = set()
+        movie_id = self._current_movie_id()
+        per_movie = room.get("asientos_ocupados_por_pelicula", {})
+        raw = per_movie.get(movie_id, []) if isinstance(per_movie, dict) and movie_id else []
+        if isinstance(raw, str) and raw.strip():
+            for item in raw.split(","):
+                item = item.strip().upper()
+                if item:
+                    occupied.add(item)
+        elif isinstance(raw, (list, tuple, set)):
+            for item in raw:
+                text = str(item).strip().upper()
+                if text:
+                    occupied.add(text)
+        return occupied
+
+    def _seat_sort_key(self, seat: str) -> tuple[int, int]:
+        row = ord(seat[0]) - ord("A") if seat else 0
+        try:
+            number = int(seat[1:])
+        except ValueError:
+            number = 0
+        return row, number
+
+    def _set_selected_seats(self, seats: list[str]) -> None:
+        self._selected_seats = sorted({seat.upper() for seat in seats}, key=self._seat_sort_key)
+        self.fields["cantidad_entradas"].set(str(len(self._selected_seats)))
+        if self._selected_seats:
+            self.seats_var.set(f"Seleccionados: {', '.join(self._selected_seats)}")
+        else:
+            self.seats_var.set("Selecciona asientos en la cuadricula.")
+
+    def _open_seat_selector(self) -> None:
+        if self.window is None:
+            return
+        self.room_lookup = self._load_room_catalog()
+        room = self._current_room()
+        if not room:
+            messagebox.showwarning("Sala requerida", "Selecciona una sala antes de marcar asientos.")
+            return
+
+        capacity = int(self.fields.get("capacidad_sala", tk.StringVar()).get() or 0)
+        if capacity <= 0:
+            messagebox.showwarning("Capacidad invalida", "La sala no tiene capacidad disponible.")
+            return
+
+        occupied = self._occupied_seats_for_room()
+        selected = set(self._selected_seats)
+        dialog = tk.Toplevel(self.window)
+        dialog.title("Seleccion de asientos")
+        dialog.geometry("760x520")
+        dialog.configure(bg="#f2f2f2")
+        dialog.transient(self.window)
+        dialog.grab_set()
+
+        info = tk.StringVar(value="Maximo 10 asientos. Verde: disponible, gris: ocupado, azul: seleccionado.")
+        tk.Label(dialog, textvariable=info, bg="#f2f2f2", fg="#333333", anchor="w", justify="left").pack(fill="x", padx=12, pady=(12, 8))
+
+        grid_frame = tk.Frame(dialog, bg="#f2f2f2")
+        grid_frame.pack(expand=True, fill="both", padx=12, pady=8)
+
+        buttons: dict[str, tk.Button] = {}
+
+        def refresh() -> None:
+            for seat, button in buttons.items():
+                if seat in occupied:
+                    button.configure(state="disabled", bg="#bdbdbd", relief="flat")
+                elif seat in selected:
+                    button.configure(state="normal", bg="#7cc4ff", relief="sunken")
+                else:
+                    button.configure(state="normal", bg="#dff5df", relief="raised")
+
+        def toggle(seat: str) -> None:
+            if seat in occupied:
+                return
+            if seat in selected:
+                selected.remove(seat)
+            else:
+                if len(selected) >= 10:
+                    messagebox.showwarning("Límite de selección", "No puedes seleccionar más de 10 asientos.", parent=dialog)
+                    return
+                selected.add(seat)
+            refresh()
+
+        for index, seat in enumerate(self._seat_codes(capacity)):
+            row = index // 10
+            column = index % 10
+            button = tk.Button(grid_frame, text=seat, width=6, command=lambda s=seat: toggle(s))
+            button.grid(row=row, column=column, padx=4, pady=4, sticky="nsew")
+            buttons[seat] = button
+
+        for column in range(10):
+            grid_frame.grid_columnconfigure(column, weight=1)
+
+        footer = tk.Frame(dialog, bg="#f2f2f2")
+        footer.pack(fill="x", padx=12, pady=(0, 12))
+
+        def confirm() -> None:
+            self._set_selected_seats(list(selected))
+            dialog.destroy()
+
+        def clear() -> None:
+            selected.clear()
+            refresh()
+
+        tk.Button(footer, text="Limpiar", command=clear, bg="#e8d6cf", relief="flat", padx=10, pady=5).pack(side="left")
+        tk.Button(footer, text="Confirmar", command=confirm, bg="#cfe8cf", relief="flat", padx=10, pady=5).pack(side="right")
+        refresh()
 
     def _collect_payload(self) -> dict[str, str]:
         payload = {key: var.get() for key, var in self.fields.items()}
@@ -327,6 +476,10 @@ class VentasUI:
         carnet = payload.pop("cliente_documento_carnet", "")
         payload["tipo_documento"] = tipo
         payload["cliente_documento"] = dni if tipo == "dni" else carnet
+        # seats
+        payload["asientos_seleccionados"] = list(self._selected_seats)
+        payload["asientos_ocupados"] = sorted(self._occupied_seats_for_room())
+        payload["cantidad_entradas"] = str(len(self._selected_seats)) if self._selected_seats else payload.get("cantidad_entradas", "0")
         return payload
 
     def _render_result(self, title: str, message: str) -> None:
@@ -365,6 +518,10 @@ class VentasUI:
                 self.fields["venta_id_buscar"].set(result.get("venta_id", ""))
                 self._render_result("Venta exitosa", result.get("ticket_texto", ""))
                 messagebox.showinfo("Venta registrada", f"Venta creada correctamente.\nVenta ID: {result.get('venta_id', '')}")
+                self.room_lookup = self._load_room_catalog()
+                self._set_selected_seats([])
+                if self.room_combo and self.room_combo["values"]:
+                    self._on_room_selected()
             else:
                 codigo = result.get("codigo_error", "ERR_GENERAL")
                 mensaje = result.get("mensaje", "Error inesperado")
@@ -393,9 +550,9 @@ class VentasUI:
             elif key in {"fecha", "hora"}:
                 self._sync_datetime_fields()
             elif key in {"cantidad_entradas"}:
-                var.set("1")
+                var.set("0")
             elif key in {"cliente_edad"}:
-                var.set("18")
+                var.set("")
             elif key == "documento_tipo":
                 var.set("dni")
             elif key == "cliente_documento_dni":
