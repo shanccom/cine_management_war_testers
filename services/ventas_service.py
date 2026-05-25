@@ -82,17 +82,27 @@ def _normalizar_mapa_asientos(raw: Any) -> dict[str, list[str]]:
 
 def _actualizar_sala_ocupada(
     sala_id: str,
+    pelicula_id: str,
     asientos: list[str],
     sala_numero: int,
     capacidad: int,
 ) -> None:
+    """Persistir asientos ocupados por sala y por pelicula dentro de salas.json.
+
+    La estructura para cada sala en el catalogo será:
+    {
+      "sala_id": "S1",
+      "asientos_ocupados_por_pelicula": {"P001": "A1,A2", "P002": "B1"},
+      "asientos_ocupados": "A1,A2,B1",
+      ...
+    }
+    """
     if not asientos:
         return
 
     try:
         sala_payload = load_json_file(str(SALAS_DATA_FILE))
     except Exception:
-    pelicula_id: str,
         sala_payload = {}
 
     items = sala_payload.get("items", []) if isinstance(sala_payload, dict) else []
@@ -114,47 +124,42 @@ def _actualizar_sala_ocupada(
         }
         items.append(target_item)
 
-    existing_map = _normalizar_mapa_asientos(target_item.get("asientos_ocupados_por_pelicula", {}))
     pelicula_key = str(pelicula_id).strip() or "desconocida"
+    existing_map = _normalizar_mapa_asientos(target_item.get("asientos_ocupados_por_pelicula", {}))
+
     occupied_for_movie = list(dict.fromkeys(existing_map.get(pelicula_key, []) + _normalizar_lista_asientos(asientos)))
     existing_map[pelicula_key] = occupied_for_movie
-    target_item["asientos_ocupados_por_pelicula"] = existing_map
 
+    # write back per-pelicula map (strings)
+    target_item["asientos_ocupados_por_pelicula"] = {k: ",".join(v) for k, v in existing_map.items()}
+
+    # combined overall occupied seats across all peliculas
     combined = list(dict.fromkeys(seat for seats in existing_map.values() for seat in seats))
     target_item["asientos_ocupados"] = ",".join(combined)
-    target_item["ocupadas_actuales"] = str(len(occupied_for_movie))
-    target_item["ocupadas"] = str(len(occupied_for_movie))
-    # support per-pelicula mapping
-    pelicula_map = {}
-    raw_map = target_item.get("asientos_ocupados_por_pelicula")
-    if isinstance(raw_map, dict):
-        pelicula_map = {k: str(v) for k, v in raw_map.items()}
-    else:
-        # fall back to legacy single-string field
-        legacy = target_item.get("asientos_ocupados", "")
-        if isinstance(legacy, str) and legacy.strip():
-            pelicula_map = {"_legacy": legacy}
 
-    # Merge and normalize for this pelicula
-    pelicula_id = str(sala_id)  # placeholder if not provided differently
-    # If caller passed pelicula_id via special key in asientos list tuple, skip (caller will pass proper arg)
-    # We'll expect caller to call helper with pelicula_id by replacing signature below if needed.
-    # For backward compatibility, use pelicula_map as-is and append to _legacy
-    existing_for_legacy = _normalizar_lista_asientos(pelicula_map.get("_legacy", ""))
-    combined_legacy = list(dict.fromkeys(existing_for_legacy + _normalizar_lista_asientos(asientos)))
-    if combined_legacy:
-        target_item["asientos_ocupados"] = ",".join(combined_legacy)
-    # update general counts as total occupied across peliculas
-    total_occupied = 0
-    for v in pelicula_map.values():
-        total_occupied += len(_normalizar_lista_asientos(v))
-    total_occupied += len(combined_legacy)
+    # store counts/legacy fields for compatibility
+    total_occupied = len(combined)
     target_item["ocupadas_actuales"] = str(total_occupied)
     target_item["ocupadas"] = str(total_occupied)
     target_item["ocupacion"] = str(total_occupied)
     target_item["occupied"] = str(total_occupied)
     target_item["numero"] = str(sala_numero)
     target_item["capacidad"] = str(capacidad)
+
+    save_json_file(str(SALAS_DATA_FILE), {"items": items})
+
+
+class VentasService:
+    def __init__(self, ventas_path: str | Path | None = None) -> None:
+        """Crear el servicio de ventas.
+
+        Si se proporciona `ventas_path`, se usará ese archivo para persistir ventas (útil en tests).
+        """
+        self.store = VentasStore(ventas_path or VENTAS_DATA_FILE)
+
+    def calcular_total(
+        self,
+        precio_unitario: float,
         cantidad_entradas: int,
         tipo_cliente: str = "general",
         promociones: list[str] | None = None,

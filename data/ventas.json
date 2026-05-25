@@ -1151,6 +1151,36 @@
         "H6",
         "H7"
       ]
+    },
+    {
+      "venta_id": "V-B0878CDA38844C6A9D32DED642EC3452",
+      "pelicula_id": "P001",
+      "pelicula_titulo": "Oppenheimer",
+      "sala_id": "S1",
+      "sala_numero": 1,
+      "funcion_id": "F-1",
+      "fecha_hora": "2026-05-25T05:32:18",
+      "cliente": {
+        "nombre": "benja",
+        "documento": "12312323",
+        "edad": 45
+      },
+      "cantidad": 1,
+      "precio_unitario": 32.0,
+      "subtotal": 32.0,
+      "descuentos": 0.0,
+      "recargos": 0.0,
+      "impuestos": 0.0,
+      "total": 32.0,
+      "metodo_pago": "efectivo",
+      "restriccion_edad": 15,
+      "estado": "registrada",
+      "ticket_texto": "TICKET DE VENTA\nVenta ID: V-B0878CDA38844C6A9D32DED642EC3452\nPelicula: Oppenheimer (P001)\nSala: S1\nFuncion: F-1\nFecha y hora: 2026-05-25T05:32:18\nCliente: benja - 12312323\nCantidad: 1\nAsientos: F8\nMetodo de pago: efectivo\nTotal: S/. 32.00\nEstado: registrada",
+      "timestamp": "2026-05-25T05:32:19",
+      "_schema_version": 1,
+      "asientos_seleccionados": [
+        "F8"
+      ]
     }
   ],
   "_todo": "Agregar ventas de ejemplo",

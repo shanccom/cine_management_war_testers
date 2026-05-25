@@ -5,24 +5,15 @@
       "id": "S1",
       "numero": "1",
       "capacidad": "120",
-      "asientos_ocupados": "F7,J8,H6,H7",
-      "ocupadas_actuales": "2",
-      "ocupadas": "2",
-      "ocupacion": "2",
-      "occupied": "2",
+      "asientos_ocupados": "F7,J8,F8,H6,H7",
+      "ocupadas_actuales": "5",
+      "ocupadas": "5",
+      "ocupacion": "5",
+      "occupied": "5",
       "asientos_ocupados_por_pelicula": {
-        "P001": [
-          "F7",
-          "J8"
-        ],
-        "P002": [
-          "H6",
-          "H7"
-        ],
-        "P004": [
-          "H6",
-          "H7"
-        ]
+        "P001": "F7,J8,F8",
+        "P002": "H6,H7",
+        "P004": "H6,H7"
       }
     }
   ]
