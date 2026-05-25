@@ -19,6 +19,7 @@ def _base_payload(**overrides: object) -> dict[str, object]:
         "fecha_hora": (datetime.now() + timedelta(hours=3)).replace(microsecond=0).isoformat(timespec="seconds"),
         "cliente_nombre": "Maria",
         "cliente_documento": "87654321",
+        "tipo_documento": "dni",
         "cliente_edad": 25,
         "cantidad_entradas": 1,
         "precio_unitario": 35.0,
@@ -226,23 +227,26 @@ def test_cliente_nombre_invalido_solo_letras_avl(ventas_service: VentasService, 
 
 
 @pytest.mark.parametrize(
-    "documento, expected_status, expected_fragment",
+    "documento, tipo_documento, expected_status, expected_fragment",
     [
-        ("1234567", "error", "8 digitos"),
-        ("12345678", "ok", None),
-        ("123456789", "ok", None),
-        ("1234567890", "error", "8 digitos"),
-        ("00000000", "ok", None),
-        ("000000000", "ok", None),
+        ("1234567", "dni", "error", "8 digitos"),
+        ("12345678", "dni", "ok", None),
+        ("123456789", "carnet", "ok", None),
+        ("1234567890", "dni", "error", "8 digitos"),
+        ("00000000", "dni", "ok", None),
+        ("000000000", "carnet", "ok", None),
+        ("123456789", "dni", "error", "8 digitos"),
+        ("12345678", "carnet", "error", "9 digitos"),
     ],
 )
 def test_limites_documento_dni_carnet_avl(
     ventas_service: VentasService,
     documento: str,
+    tipo_documento: str,
     expected_status: str,
     expected_fragment: str | None,
 ) -> None:
-    payload = _base_payload(cliente_documento=documento)
+    payload = _base_payload(cliente_documento=documento, tipo_documento=tipo_documento)
     result = ventas_service.comprar_entrada(payload)
     assert result["status"] == expected_status
     if expected_status == "error":

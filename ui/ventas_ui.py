@@ -322,10 +322,10 @@ class VentasUI:
         fecha = payload.pop("fecha", "")
         hora = payload.pop("hora", "")
         payload["fecha_hora"] = f"{fecha}T{hora}"
-        # assemble cliente_documento from selected tipo
-        tipo = payload.pop("documento_tipo", "dni")
+        tipo = payload.get("documento_tipo", "dni")
         dni = payload.pop("cliente_documento_dni", "")
         carnet = payload.pop("cliente_documento_carnet", "")
+        payload["tipo_documento"] = tipo
         payload["cliente_documento"] = dni if tipo == "dni" else carnet
         return payload
 

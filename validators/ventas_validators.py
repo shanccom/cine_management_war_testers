@@ -96,7 +96,8 @@ def validar_payload_venta(payload: dict[str, Any]) -> dict[str, Any]:
         "funcion_id": validar_texto_no_vacio(payload.get("funcion_id"), "funcion_id"),
         "fecha_hora": validar_fecha_hora(payload.get("fecha_hora")),
         "cliente_nombre": validar_nombre_cliente(payload.get("cliente_nombre")),
-        "cliente_documento": validar_documento_identidad(payload.get("cliente_documento")),
+        "tipo_documento": validar_tipo_documento(payload.get("tipo_documento", "dni")),
+        "cliente_documento": validar_documento_identidad(payload.get("cliente_documento"), payload.get("tipo_documento", "dni")),
         "cliente_edad": validar_edad_cliente(payload.get("cliente_edad")),
         "cantidad_entradas": validar_entero(payload.get("cantidad_entradas"), "cantidad_entradas", minimo=MIN_POR_COMPRA, maximo=MAX_POR_COMPRA),
         "precio_unitario": validar_decimal(payload.get("precio_unitario"), "precio_unitario", minimo=0.0),
@@ -111,7 +112,14 @@ def validar_payload_venta(payload: dict[str, Any]) -> dict[str, Any]:
     return validated
 
 
-def validar_documento_identidad(value: Any) -> str:
+def validar_tipo_documento(value: Any) -> str:
+    tipo = validar_texto_no_vacio(value, "tipo_documento").lower()
+    if tipo not in {"dni", "carnet"}:
+        raise ValueError("tipo_documento debe ser dni o carnet")
+    return tipo
+
+
+def validar_documento_identidad(value: Any, tipo_documento: Any = "dni") -> str:
     if value is None:
         raise ValueError("cliente_documento no puede ser nulo")
     if isinstance(value, bool):
@@ -128,8 +136,11 @@ def validar_documento_identidad(value: Any) -> str:
     if not texto.isdigit():
         raise ValueError("cliente_documento debe contener solo numeros")
 
-    if len(texto) not in (8, 9):
-        raise ValueError("cliente_documento debe tener 8 digitos para DNI o 9 digitos para Carnet de Extranjeria")
+    tipo = validar_tipo_documento(tipo_documento)
+    if tipo == "dni" and len(texto) != 8:
+        raise ValueError("cliente_documento debe tener 8 digitos para DNI")
+    if tipo == "carnet" and len(texto) != 9:
+        raise ValueError("cliente_documento debe tener 9 digitos para Carnet de Extranjeria")
 
     return texto
 

@@ -701,6 +701,33 @@
       "ticket_texto": "TICKET DE VENTA\nVenta ID: V-D5BA894282C749A1A8C5CE86260AF74A\nPelicula: Intensamente 2 (P002)\nSala: S1\nFuncion: F-1\nFecha y hora: 2026-05-25T04:07:01\nCliente: raul - 12334545\nCantidad: 1\nMetodo de pago: efectivo\nTotal: S/. 0.00\nEstado: registrada",
       "timestamp": "2026-05-25T04:07:01",
       "_schema_version": 1
+    },
+    {
+      "venta_id": "V-C9BD914DEA624E14B2B374505AB936B8",
+      "pelicula_id": "P004",
+      "pelicula_titulo": "Garfield: Fuera de Casa",
+      "sala_id": "S1",
+      "sala_numero": 1,
+      "funcion_id": "F-1",
+      "fecha_hora": "2026-05-25T04:10:51",
+      "cliente": {
+        "nombre": "benja",
+        "documento": "123123122",
+        "edad": 5
+      },
+      "cantidad": 1,
+      "precio_unitario": 22.0,
+      "subtotal": 22.0,
+      "descuentos": 0.0,
+      "recargos": 0.0,
+      "impuestos": 0.0,
+      "total": 22.0,
+      "metodo_pago": "efectivo",
+      "restriccion_edad": 0,
+      "estado": "registrada",
+      "ticket_texto": "TICKET DE VENTA\nVenta ID: V-C9BD914DEA624E14B2B374505AB936B8\nPelicula: Garfield: Fuera de Casa (P004)\nSala: S1\nFuncion: F-1\nFecha y hora: 2026-05-25T04:10:51\nCliente: benja - 123123122\nCantidad: 1\nMetodo de pago: efectivo\nTotal: S/. 22.00\nEstado: registrada",
+      "timestamp": "2026-05-25T04:10:51",
+      "_schema_version": 1
     }
   ],
   "_todo": "Agregar ventas de ejemplo",

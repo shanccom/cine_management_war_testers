@@ -19,6 +19,7 @@ def _base_payload(**overrides: object) -> dict[str, object]:
         "fecha_hora": (datetime.now() + timedelta(hours=2)).replace(microsecond=0).isoformat(timespec="seconds"),
         "cliente_nombre": "Juan",
         "cliente_documento": "12345678",
+        "tipo_documento": "dni",
         "cliente_edad": 20,
         "cantidad_entradas": 2,
         "precio_unitario": 24.0,
@@ -262,30 +263,34 @@ def test_cliente_nombre_no_crashea_pe(ventas_service: VentasService) -> None:
 
 
 @pytest.mark.parametrize(
-    "documento, expected_status, expected_fragment",
+    "documento, tipo_documento, expected_status, expected_fragment",
     [
-        ("12345678", "ok", None),
-        ("123456789", "ok", None),
-        ("00000000", "ok", None),
-        (" 12345678 ", "error", "espacios"),
-        ("1234567", "error", "8 digitos"),
-        ("1234567890", "error", "8 digitos"),
-        ("12A45678", "error", "solo numeros"),
-        ("12-45678", "error", "solo numeros"),
-        ("", "error", "vac"),
-        (None, "error", "nulo"),
-        (True, "error", "cadena"),
-        (["12345678"], "error", "cadena"),
-        ({"doc": "12345678"}, "error", "cadena"),
+        ("12345678", "dni", "ok", None),
+        ("123456789", "carnet", "ok", None),
+        ("00000000", "dni", "ok", None),
+        ("000000000", "carnet", "ok", None),
+        ("123456789", "dni", "error", "8 digitos"),
+        ("12345678", "carnet", "error", "9 digitos"),
+        (" 12345678 ", "dni", "error", "espacios"),
+        ("1234567", "dni", "error", "8 digitos"),
+        ("1234567890", "dni", "error", "8 digitos"),
+        ("12A45678", "dni", "error", "solo numeros"),
+        ("12-45678", "dni", "error", "solo numeros"),
+        ("", "dni", "error", "vac"),
+        (None, "dni", "error", "nulo"),
+        (True, "dni", "error", "cadena"),
+        (["12345678"], "dni", "error", "cadena"),
+        ({"doc": "12345678"}, "dni", "error", "cadena"),
     ],
 )
 def test_cliente_documento_pe(
     ventas_service: VentasService,
     documento: object,
+    tipo_documento: str,
     expected_status: str,
     expected_fragment: str | None,
 ) -> None:
-    payload = _base_payload(cliente_documento=documento)
+    payload = _base_payload(cliente_documento=documento, tipo_documento=tipo_documento)
     result = ventas_service.comprar_entrada(payload)
     assert result["status"] == expected_status
     if expected_status == "error":
