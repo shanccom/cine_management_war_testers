@@ -111,22 +111,29 @@ def test_cliente_nombre_too_short_and_too_long_avl(ventas_service: VentasService
 
 
 @pytest.mark.parametrize(
-    "documento, expected_status",
+    "documento, expected_status, expected_fragment",
     [
-        ("1234567", "error"),
-        ("12345678", "ok"),
-        ("123456789", "ok"),
-        ("1234567890", "error"),
-        ("00000000", "ok"),
-        ("000000000", "ok"),
+        ("1234567", "error", "8 digitos"),
+        ("12345678", "ok", None),
+        ("123456789", "ok", None),
+        ("1234567890", "error", "8 digitos"),
+        ("00000000", "ok", None),
+        ("000000000", "ok", None),
     ],
 )
-def test_limites_documento_dni_carnet_avl(ventas_service: VentasService, documento: str, expected_status: str) -> None:
+def test_limites_documento_dni_carnet_avl(
+    ventas_service: VentasService,
+    documento: str,
+    expected_status: str,
+    expected_fragment: str | None,
+) -> None:
     payload = _base_payload(cliente_documento=documento)
     result = ventas_service.comprar_entrada(payload)
     assert result["status"] == expected_status
     if expected_status == "error":
         assert result["codigo_error"] == "ERR_VALIDACION"
+        assert expected_fragment is not None
+        assert expected_fragment in result["mensaje"].lower()
 
 
 @pytest.mark.parametrize(
@@ -151,3 +158,4 @@ def test_documento_solo_numeros_y_sin_simbolos_avl(ventas_service: VentasService
     result = ventas_service.comprar_entrada(payload)
     assert result["status"] == "error"
     assert result["codigo_error"] == "ERR_VALIDACION"
+    assert "numeros" in result["mensaje"].lower() or "cadena" in result["mensaje"].lower() or "nulo" in result["mensaje"].lower()

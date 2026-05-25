@@ -124,6 +124,8 @@ def validar_documento_identidad(value: Any) -> str:
     texto = value.strip()
     if not texto:
         raise ValueError("cliente_documento no puede estar vacio")
+    if texto != value:
+        raise ValueError("cliente_documento no debe tener espacios al inicio o al final")
 
     if not texto.isdigit():
         raise ValueError("cliente_documento debe contener solo numeros")
