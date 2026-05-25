@@ -1,33 +1,9 @@
 """
-Interfaz del modulo de reportes.
+Modulo de reportes en consola.
 
-TODO: definir componentes y acciones del modulo.
+TODO: implementar reportes en consola.
 """
 
-import tkinter as tk
-
-
 class ReportesUI:
-    def __init__(self, parent: tk.Tk) -> None:
-        self.parent = parent
-        self.window: tk.Toplevel | None = None
-
     def show(self) -> None:
-        if self.window is None or not self.window.winfo_exists():
-            self.window = tk.Toplevel(self.parent)
-            self.window.title("Reportes")
-            self.window.geometry("400x300")
-            self.window.configure(bg="#f2f2f2")
-
-            label = tk.Label(
-                self.window,
-                text="Modulo de Reportes",
-                bg="#f2f2f2",
-                fg="#333333",
-                font=("Arial", 12, "bold"),
-            )
-            label.pack(pady=20)
-
-            # TODO: agregar filtros y vista de reportes
-        else:
-            self.window.focus()
+        print("Modulo de reportes no implementado.")

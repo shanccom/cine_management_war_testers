@@ -110,3 +110,13 @@ TODO: indicar resultados obtenidos del prompt.
 - Resultado esperado: Pruebas PE y AVL reales para ventas, alineadas con comprar entrada, mostrar ticket y calcular total; documentacion actualizada.
 - Resultado obtenido: `tests/test_pe_ventas.py` y `tests/test_avl_ventas.py` convertidos a pytest, con casos PE/AVL y ticket; historial de prompts actualizado.
 
+---
+
+### Entrada creada: Integracion completa de modulos desde main.py
+
+- Fecha: 2026-05-25
+- Autor: Persona 4 (asistente automatizado)
+- Contexto: Solicitud para integrar los modulos existentes del proyecto respetando la estructura actual, usando `main.py` como punto principal de ejecucion y evitando refactorizaciones innecesarias.
+- Prompt: "Necesito que realices la integracion completa de los modulos del proyecto usando la estructura actual del repositorio, teniendo como punto principal de ejecucion `main.py`."
+- Resultado esperado: `main.py` funcionando como orquestador, modulos conectados, JSON compatibles, documentacion tecnica y manual de usuario actualizados, sistema ejecutable sin errores de integracion.
+- Resultado obtenido: `main.py` inicializa datos y abre el menu principal; `ui/main_window.py` integra peliculas, salas, ventas y reportes; `data/peliculas.json` y `data/salas.json` quedaron compatibles; documentacion actualizada; pruebas ejecutadas con `258 passed`.
