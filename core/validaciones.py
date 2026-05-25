@@ -1,20 +1,29 @@
 """
 Funciones de validacion.
-
-TODO: implementar PE, AVL y reglas de negocio.
 """
 
+from __future__ import annotations
 
-def validar_pelicula(data: dict) -> bool:
-    # TODO: definir validaciones PE y AVL para peliculas
-    return True
+from typing import Any
 
-
-def validar_sala(data: dict) -> bool:
-    # TODO: definir validaciones PE y AVL para salas
-    return True
+from validators.ventas_validators import validar_payload_venta
 
 
-def validar_venta(data: dict) -> bool:
-    # TODO: definir validaciones PE y AVL para ventas
+def validar_pelicula(data: dict[str, Any]) -> bool:
+    if not isinstance(data, dict):
+        return False
+    return all(key in data for key in ("pelicula_id", "titulo", "duracion", "clasificacion"))
+
+
+def validar_sala(data: dict[str, Any]) -> bool:
+    if not isinstance(data, dict):
+        return False
+    return all(key in data for key in ("sala_id", "numero", "capacidad"))
+
+
+def validar_venta(data: dict[str, Any]) -> bool:
+    try:
+        validar_payload_venta(data)
+    except (TypeError, ValueError):
+        return False
     return True

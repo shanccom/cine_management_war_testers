@@ -55,3 +55,25 @@ TODO: indicar resultados obtenidos del prompt.
 - Resultado esperado: Documento con clases PE/AVL, casos de prueba, muestras JSON, guia de implementacion y lista de tests recomendados.
 - Resultado obtenido: Documento `docs/preparacion_pe_avl_venta_entradas.md` creado y registro actualizado.
 
+---
+
+### Entrada creada: Venta de Entradas - Plan UI (sin codigo)
+
+- Fecha: 2026-05-24
+- Autor: Persona 3 (asistente automatizado)
+- Contexto: Solicitud para implementar todo en la interfaz; en respuesta se genero un plan de implementacion UI sin codigo para guiar al Integrante 3 y al equipo de QA.
+- Prompt: "ahora implementa todo en la interfaz , analizando todos los documentos pertinente"
+- Resultado esperado: Documento tecnico `docs/ui_implementacion_venta_entradas.md` describiendo componentes, flujos, validaciones UI, hooks para tests y checklist de integracion.
+- Resultado obtenido: Documento creado y registrado; no se genero codigo conforme a restricciones del proyecto.
+
+---
+
+### Entrada creada: Venta de Entradas - Ajuste UI con seleccion de peliculas
+
+- Fecha: 2026-05-24
+- Autor: Persona 3 (asistente automatizado)
+- Contexto: Solicitud para ajustar la interfaz de ventas usando una barra desplegable para peliculas, con formulario minimalista y opciones realistas.
+- Prompt: "En la opción de peliculas, se precisa un campo de selección con una barra desplegable, no se requiere campo, quiero que el rellenado del formulario sea el más real posible y minimalista, evita poner id de pelicula, queremos opciones reales"
+- Resultado esperado: Interfaz de ventas actualizada para usar seleccion desplegable de peliculas con datos reales o realistamente simulados, ocultando el id al usuario.
+- Resultado obtenido: UI actualizada con combobox de peliculas y salas, ids ocultos y formulario minimalista.
+
