@@ -1,7 +1,7 @@
 """
 Sistema de Gestion de Cine
 
-TODO: Punto de entrada principal. Agregar configuracion y carga inicial.
+TODO: Punto de entrada principal. Agregar configuracion y carga inicial..
 """
 
 import tkinter as tk
